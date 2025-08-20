@@ -20,7 +20,7 @@ jobs:
       - name: Build Go binary
         run: |
           go mod tidy
-          go build -o hamas_daemon main.go
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o hamas_daemon main.go
 
       - name: Copy binary to VPS
         uses: appleboy/scp-action@v0.1.7
