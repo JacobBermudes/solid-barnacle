@@ -1,0 +1,43 @@
+name: Deploy HAMAS VPN
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+
+      - name: Build Go binary
+        run: |
+          go mod tidy
+          go build -o hamas_daemon main.go
+
+      - name: Copy binary to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "hamas_daemon"
+          target: "/etc/hamas_vpn_daemon/hamas_daemon"
+
+      - name: Restart service on VPS
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            systemctl stop vpn_tg_daemon || true
+            chmod +x /etc/hamas_vpn_daemon/hamas_daemon
+            systemctl start vpn_tg_daemon
