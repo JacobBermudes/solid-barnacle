@@ -37,7 +37,7 @@ func (r *RedisAccount) AccountInit(userid int64, username string) {
 			Userid:    userid,
 			Username:  username,
 			Balance:   0,
-			Tariff:    "Бесплатный",
+			Tariff:    "Свойский",
 			Adblocker: false,
 			Active:    false,
 			SharedKey: "",
