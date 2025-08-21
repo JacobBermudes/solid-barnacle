@@ -38,6 +38,6 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            systemctl stop vpn_tg_daemon || true
-            chmod +x /etc/hamas_vpn_daemon/hamas_daemon
-            systemctl start vpn_tg_daemon
+            sudo systemctl stop vpn_tg_daemon || true
+            chmod +x /etc/hamas_vpn_daemon/hamas_daemon/hamas_daemon
+            sudo systemctl start vpn_tg_daemon

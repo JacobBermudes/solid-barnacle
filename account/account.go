@@ -39,7 +39,7 @@ func (r *RedisAccount) AccountInit(userid int64, username string) {
 			Balance:   0,
 			Tariff:    "По братски",
 			Adblocker: false,
-			Active:    false,
+			Active:    true,
 			SharedKey: "",
 		}
 		accountData, err := json.Marshal(r)
