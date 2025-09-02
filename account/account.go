@@ -27,36 +27,66 @@ type RedisAccount struct {
 	Active    bool   `json:"active"`
 }
 
-func (r *RedisAccount) AccountInit(userid int64, username string) {
+type DBAccount struct {
+	UserID   int64  `json:"userid"`
+	Username string `json:"username"`
+	Tariff   string `json:"tariff"`
+	Active   bool   `json:"active"`
+}
 
-	dbaccount, err := rdb.Get(ctx, fmt.Sprintf("%d", userid)).Result()
-	if err != nil {
-		fmt.Println("Error fetching account from Redis:", err)
-		fmt.Println("Creating new account")
-		r = &RedisAccount{
-			Userid:    userid,
-			Username:  username,
-			Balance:   0,
-			Tariff:    "По братски",
-			Adblocker: false,
-			Active:    true,
-			SharedKey: "",
+type DatabaseQuery struct {
+	UserID    int64
+	QueryType string
+	Query     string
+	ReplyChan chan DatabaseAnswer
+}
+
+type DatabaseAnswer struct {
+	Result string
+	Err    error
+}
+
+func (r *RedisAccount) AccountInit(queryChan chan DatabaseQuery) {
+
+	query := DatabaseQuery{
+		UserID:    r.Userid,
+		QueryType: "getAccDB",
+		Query:     fmt.Sprintf("%d", r.Userid),
+		ReplyChan: make(chan DatabaseAnswer),
+	}
+	queryChan <- query
+
+	answer := <-query.ReplyChan
+
+	if answer.Err != nil {
+		fmt.Println("New user!")
+		newAcc := DBAccount{
+			UserID:   r.Userid,
+			Username: r.Username,
+			Tariff:   "Бесплатный",
+			Active:   false,
 		}
-		accountData, err := json.Marshal(r)
+		accountData, err := json.Marshal(newAcc)
 		if err != nil {
 			fmt.Println("Error marshaling account:", err)
 			return
 		}
-		err = rdb.Set(ctx, fmt.Sprintf("%d", userid), accountData, 0).Err()
-		if err != nil {
+
+		query = DatabaseQuery{
+			UserID:    r.Userid,
+			QueryType: "setAccDB",
+			Query:     string(accountData),
+			ReplyChan: make(chan DatabaseAnswer),
+		}
+		queryChan <- query
+		answer = <-query.ReplyChan
+
+		if answer.Err != nil {
 			fmt.Println("Error saving account to Redis:", err)
-			return
 		}
 		return
-	}
-	err = json.Unmarshal([]byte(dbaccount), &r)
-	if err != nil {
-		fmt.Println("Error unmarshaling account:", err)
+	} else {
+
 	}
 }
 
@@ -81,18 +111,51 @@ func (r *RedisAccount) GetAdblocker() bool {
 }
 
 func (r *RedisAccount) GetSharedKey() string {
-	if r.SharedKey == "" {
-		return "Остутствует!"
+
+	if !r.Active {
+		r.Active = true
 	}
+
+	if r.SharedKey == "" {
+		var keysdb = redis.NewClient(&redis.Options{
+			Addr:     "localhost:6379",
+			DB:       1,
+			Password: rdbpass,
+		})
+
+		inactiveKeys, err := keysdb.SMembers(ctx, "inactive_keys").Result()
+		if err != nil {
+			fmt.Println("Error read keys data...")
+			return "Ошибка получения ключ доступа к VPN..."
+		}
+
+		if len(inactiveKeys) == 0 {
+			fmt.Println("Empty keys storage...")
+			return "Ошибка получения ключ доступа к VPN..."
+		}
+
+		ts := keysdb.TxPipeline()
+		ts.SRem(ctx, "inactive_keys", inactiveKeys[0])
+		ts.SAdd(ctx, "active_keys", inactiveKeys[0])
+		_, err = ts.Exec(ctx)
+		if err != nil {
+			fmt.Println("Error to save keys for account...")
+			return "Ошибка получения ключ доступа к VPN..."
+		}
+
+		r.SharedKey = inactiveKeys[0]
+		saveAccountData(r)
+	}
+
 	return r.SharedKey
 }
 
 func (r *RedisAccount) GetActive() string {
 	desc := "ошибка"
 	if r.Active {
-		desc = "включен"
+		desc = "Активен"
 	} else {
-		desc = "выключен"
+		desc = "Отключен"
 	}
 	return desc
 }
@@ -107,6 +170,17 @@ func (r *RedisAccount) ToggleVpn() (bool, error) {
 	r.Active = !r.Active
 	err := saveAccountData(r)
 	return r.Active, err
+}
+
+func (r *RedisAccount) AddSharedKey(key string) string {
+
+	var keysdb = redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		DB:       1,
+		Password: rdbpass,
+	})
+	keysdb.SAdd(ctx, "active_keys", key)
+	return key
 }
 
 func saveAccountData(r *RedisAccount) error {

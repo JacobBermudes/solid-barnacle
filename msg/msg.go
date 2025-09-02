@@ -12,24 +12,22 @@ func (m MessageCreator) HomeMsg(username string, balance int64, tariff string, a
 
 	msg := tgbotapi.NewMessage(0, "")
 
-	msg.Text = "Пользователь " + username + "!\n\n" +
+	msg.Text = "Бот управления доступом Madjahead VPN" + "\n\n" +
+		"Пользователь " + username + "\n\n" +
 		"Твой баланс: " + fmt.Sprintf("%d", balance) + "\n\n" +
 		"Тариф: " + tariff + "\n" +
-		"Ключ доступа VPN: " + active + "\n\n" +
+		"Статус доступа к VPN: " + active + "\n\n" +
 		"Блокировка рекламы: " + fmt.Sprintf("%t", adblocker) + "\n"
 
 	msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("⚙️ Управление VPN", "settings"),
+			tgbotapi.NewInlineKeyboardButtonData("⚙️ Подключение к VPN", "vpnConnect"),
 		),
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("🏦 Баланс", "balance"),
 		),
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("🧰 Инструкция по подключению", "instruction"),
-		),
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("🍿 Youtube без рекламы", "adblocker"),
 		),
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("🤝 Пригласить друга", "referral"),
@@ -60,15 +58,24 @@ func (m MessageCreator) BalanceEditMsg() tgbotapi.MessageConfig {
 	return msg
 }
 
-func (m MessageCreator) SettingsMsg() tgbotapi.MessageConfig {
+func (m MessageCreator) VpnConnectMsg() tgbotapi.MessageConfig {
 	msg := tgbotapi.NewMessage(0, "")
-	msg.Text = "Это настройки вашего VPN. Вы можете получить ключ подключения или отключить VPN.\n\n"
+	msg.Text = "Необходимо выбрать операционную систему для предоставления детальной информации по подключению: \n\n"
 	msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("🔄 Подключить/Отключить VPN", "toggleVpn"),
+			tgbotapi.NewInlineKeyboardButtonData("Android", "androidHelpMsg"),
 		),
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("🔑 Ключи доступа", "keys"),
+			tgbotapi.NewInlineKeyboardButtonData("I'Os", "iosHelpMsg"),
+		),
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("Windows", "windowsHelpMsg"),
+		),
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("Linux", "linuxHelpMsg"),
+		),
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("Только реквизиты", "vpnConnectMsg"),
 		),
 	)
 
