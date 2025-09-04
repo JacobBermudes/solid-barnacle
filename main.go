@@ -168,10 +168,10 @@ func commandHandler(command string, acc RedisReader, queryChan chan account.Data
 	switch command {
 	case "addkey":
 		key_sender = acc.GetUserID()
-		return tgbotapi.NewMessage(0, "Введите ключ без vpn:// ")
+		return tgbotapi.NewMessage(0, "Ожидаем ключа без VPN://")
 	case "start":
 		acc.AccountInit(queryChan)
-		return tgbotapi.NewMessage(0, "")
+		return messenger.HomeMsg(acc.GetUsername(), acc.GetBalance(), acc.GetTariff(), acc.GetAdblocker(), acc.GetActive())
 	}
 
 	return tgbotapi.NewMessage(0, "Ошибка разбора команды.Обратитесь в поддержку")
