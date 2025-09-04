@@ -1,30 +1,20 @@
 package account
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
-	"os"
-
-	"github.com/go-redis/redis/v8"
+	"strconv"
+	"strings"
 )
 
-var rdbpass = os.Getenv("REDIS_PASS")
-var rdb = redis.NewClient(&redis.Options{
-	Addr:     "localhost:6379",
-	DB:       0,
-	Password: rdbpass,
-})
-var ctx = context.Background()
-
 type RedisAccount struct {
-	Userid    int64  `json:"userid"`
-	Username  string `json:"username"`
-	Balance   int64  `json:"balance"`
-	Tariff    string `json:"tariff"`
-	Adblocker bool   `json:"adblocker"`
-	SharedKey string `json:"sharedkey"`
-	Active    bool   `json:"active"`
+	Userid     int64    `json:"userid"`
+	Username   string   `json:"username"`
+	Balance    int64    `json:"balance"`
+	Tariff     string   `json:"tariff"`
+	Adblocker  bool     `json:"adblocker"`
+	SharedKeys []string `json:"sharedkey"`
+	Active     bool     `json:"active"`
 }
 
 type DBAccount struct {
@@ -58,7 +48,7 @@ func (r *RedisAccount) AccountInit(queryChan chan DatabaseQuery) {
 
 	answer := <-query.ReplyChan
 
-	if answer.Err != nil {
+	if answer.Err != nil && len(answer.Result) == 0 {
 		fmt.Println("New user!")
 		newAcc := DBAccount{
 			UserID:   r.Userid,
@@ -84,9 +74,48 @@ func (r *RedisAccount) AccountInit(queryChan chan DatabaseQuery) {
 		if answer.Err != nil {
 			fmt.Println("Error saving account to Redis:", err)
 		}
+
+		r.Balance = 0
+		r.Tariff = newAcc.Tariff
+		r.Adblocker = false
+		r.SharedKeys = []string{}
+		r.Active = newAcc.Active
+
 		return
 	} else {
+		err := json.Unmarshal([]byte(answer.Result), &r)
+		if err != nil {
+			fmt.Println("Ошибка парсинга данных из бд")
+		}
 
+		query = DatabaseQuery{
+			UserID:    r.Userid,
+			QueryType: "getBalance",
+			Query:     "",
+			ReplyChan: make(chan DatabaseAnswer),
+		}
+		queryChan <- query
+		answer = <-query.ReplyChan
+		balance, err := strconv.ParseInt(answer.Result, 10, 64)
+		if err != nil {
+			fmt.Println("Ошибка преобразования баланса:", err)
+			r.Balance = 0
+		} else {
+			r.Balance = balance
+		}
+
+		query = DatabaseQuery{
+			UserID:    r.Userid,
+			QueryType: "getKeysList",
+			Query:     fmt.Sprintf("%d", r.Userid),
+			ReplyChan: make(chan DatabaseAnswer),
+		}
+		queryChan <- query
+		answer = <-query.ReplyChan
+
+		r.SharedKeys = strings.Split(answer.Result, ",")
+		r.Adblocker = false
+		r.Active = len(strings.Split(answer.Result, ",")) == 0
 	}
 }
 
@@ -110,44 +139,30 @@ func (r *RedisAccount) GetAdblocker() bool {
 	return r.Adblocker
 }
 
-func (r *RedisAccount) GetSharedKey() string {
+func (r *RedisAccount) GetSharedKey(queryChan chan DatabaseQuery) []string {
 
 	if !r.Active {
 		r.Active = true
 	}
 
-	if r.SharedKey == "" {
-		var keysdb = redis.NewClient(&redis.Options{
-			Addr:     "localhost:6379",
-			DB:       1,
-			Password: rdbpass,
-		})
-
-		inactiveKeys, err := keysdb.SMembers(ctx, "inactive_keys").Result()
-		if err != nil {
-			fmt.Println("Error read keys data...")
-			return "Ошибка получения ключ доступа к VPN..."
+	if len(r.SharedKeys) == 0 {
+		query := DatabaseQuery{
+			UserID:    r.Userid,
+			QueryType: "getKeysList",
+			Query:     fmt.Sprintf("%d", r.Userid),
+			ReplyChan: make(chan DatabaseAnswer),
 		}
+		queryChan <- query
+		answer := <-query.ReplyChan
 
-		if len(inactiveKeys) == 0 {
-			fmt.Println("Empty keys storage...")
-			return "Ошибка получения ключ доступа к VPN..."
+		if len(strings.Split(answer.Result, ",")) == 0 {
+			r.SharedKeys = r.addKey(queryChan)
+		} else {
+			r.SharedKeys = strings.Split(answer.Result, ",")
 		}
-
-		ts := keysdb.TxPipeline()
-		ts.SRem(ctx, "inactive_keys", inactiveKeys[0])
-		ts.SAdd(ctx, "active_keys", inactiveKeys[0])
-		_, err = ts.Exec(ctx)
-		if err != nil {
-			fmt.Println("Error to save keys for account...")
-			return "Ошибка получения ключ доступа к VPN..."
-		}
-
-		r.SharedKey = inactiveKeys[0]
-		saveAccountData(r)
 	}
 
-	return r.SharedKey
+	return r.SharedKeys
 }
 
 func (r *RedisAccount) GetActive() string {
@@ -162,39 +177,27 @@ func (r *RedisAccount) GetActive() string {
 
 func (r *RedisAccount) TopupAccount(sum int64) (int64, error) {
 	r.Balance += sum
-	err := saveAccountData(r)
-	return sum, err
+	return sum, nil
 }
 
 func (r *RedisAccount) ToggleVpn() (bool, error) {
 	r.Active = !r.Active
-	err := saveAccountData(r)
-	return r.Active, err
+	return r.Active, nil
 }
 
-func (r *RedisAccount) AddSharedKey(key string) string {
+func (r *RedisAccount) addKey(queryChan chan DatabaseQuery) []string {
 
-	var keysdb = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		DB:       1,
-		Password: rdbpass,
-	})
-	keysdb.SAdd(ctx, "active_keys", key)
-	return key
-}
-
-func saveAccountData(r *RedisAccount) error {
-	accountData, err := json.Marshal(r)
-
-	if err != nil {
-		fmt.Println("Error marshaling account:", err)
-		return err
+	query := DatabaseQuery{
+		UserID:    r.Userid,
+		QueryType: "pickupKey",
+		Query:     fmt.Sprintf("%d", r.Userid),
+		ReplyChan: make(chan DatabaseAnswer),
 	}
 
-	err = rdb.Set(ctx, fmt.Sprintf("%d", r.Userid), accountData, 0).Err()
-	if err != nil {
-		fmt.Println("Error to save account data to DB!: ", err)
-	}
+	queryChan <- query
+	answer := <-query.ReplyChan
 
-	return err
+	r.SharedKeys = append(r.SharedKeys, answer.Result)
+
+	return r.SharedKeys
 }
