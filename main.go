@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"mmcvpn/account"
@@ -22,7 +23,7 @@ type mmcMsg interface {
 var messenger mmcMsg = msg.MessageCreator{}
 
 type RedisReader interface {
-	AccountInit(queryChan chan account.DatabaseQuery)
+	AccountInit(queryChan chan account.DatabaseQuery) *account.RedisAccount
 	GetUsername() string
 	GetBalance() int64
 	GetTariff() string
@@ -32,6 +33,7 @@ type RedisReader interface {
 	GetSharedKey(queryChan chan account.DatabaseQuery) []string
 	ToggleVpn() (bool, error)
 	TopupAccount(int64) (int64, error)
+	AddKey(queryChan chan account.DatabaseQuery) string
 }
 
 var key_sender int64
@@ -95,27 +97,39 @@ func main() {
 			} else if update.Message != nil {
 
 				if key_sender == accountReader.GetUserID() {
-					queryChan <- account.DatabaseQuery{
+
+					query := account.DatabaseQuery{
 						UserID:    0,
 						QueryType: "addkey",
 						Query:     update.Message.Text,
 						ReplyChan: make(chan account.DatabaseAnswer),
 					}
+
+					queryChan <- query
+					answer := <-query.ReplyChan
+					fmt.Printf("%s", answer.Result)
+					key_sender = 0
+
+					msg := tgbotapi.NewMessage(update.FromChat().ID, "Ключ успешно добавлен")
+					msg.ChatID = update.Message.SenderChat.ID
+
+					bot.Send(msg)
 				}
 
 				if update.Message.IsCommand() {
 
 					msg := commandHandler(update.Message.Command(), accountReader, queryChan)
+					msg.ChatID = update.FromChat().ID
 
 					if _, err := bot.Send(msg); err != nil {
 						log.Printf("Ошибка отправки сообщения в чат: %v", err)
 					}
 				} else {
 
-					accountReader.AccountInit(queryChan)
+					//accountReader.AccountInit(queryChan)
 
-					homeMsg := messenger.HomeMsg(accountReader.GetUsername(), accountReader.GetBalance(), accountReader.GetTariff(), accountReader.GetAdblocker(), accountReader.GetActive())
-					homeMsg.ChatID = update.Message.Chat.ID
+					homeMsg := tgbotapi.NewMessage(0, "Test")
+					homeMsg.ChatID = update.FromChat().ID
 
 					if _, err := bot.Send(homeMsg); err != nil {
 						log.Printf("Ошибка отправки сообщения в чат: %v", err)
@@ -130,6 +144,15 @@ func main() {
 func menuCallbackHandler(data string, acc RedisReader, queryChan chan account.DatabaseQuery) (tgbotapi.MessageConfig, bool) {
 
 	switch data {
+	case "addkey":
+		answer := acc.AddKey(queryChan)
+		text := ""
+		if answer == "Ключей как будто бы и нет..." {
+			text = "Ключей как будто бы и нет..."
+		} else {
+			text = fmt.Sprintf("Ключ <code>%s</code>успешно привязан к аккаунту!", answer)
+		}
+		return tgbotapi.NewMessage(0, text), true
 	case "vpnConnect":
 		return messenger.VpnConnectMsg(acc.GetSharedKey(queryChan)), false
 	case "toggleVpn":
@@ -201,6 +224,7 @@ func DBWorker(queryChan <-chan account.DatabaseQuery) {
 	})
 
 	for query := range queryChan {
+		fmt.Printf("\n\n%s", query.QueryType)
 		switch query.QueryType {
 		case "addkey":
 			keysDb.SAdd(ctx, "ready_keys", query.Query)
@@ -208,26 +232,26 @@ func DBWorker(queryChan <-chan account.DatabaseQuery) {
 				Result: "Ключ успешно добавлен!",
 				Err:    nil,
 			}
-			return
 		case "getAccDB":
 			result, err := accountDb.Get(ctx, query.Query).Result()
 			query.ReplyChan <- account.DatabaseAnswer{
 				Result: result,
 				Err:    err,
 			}
-			return
 		case "setAccDB":
-			err := accountDb.Set(ctx, fmt.Sprintf("%d", query.UserID), query.Query, 0).Err()
+			accountDb.Set(ctx, fmt.Sprintf("%d", query.UserID), query.Query, 0)
 			query.ReplyChan <- account.DatabaseAnswer{
 				Result: "Запись успешно завершена!",
-				Err:    err,
+				Err:    nil,
 			}
-			return
 		case "pickupKey":
 			freeKeys, err := keysDb.SMembers(ctx, "ready_keys").Result()
 			if err != nil || len(freeKeys) == 0 {
-				fmt.Println("Кдючей как будто бы нет..")
-				return
+				query.ReplyChan <- account.DatabaseAnswer{
+					Result: "Ключей как будто бы и нет...",
+					Err:    errors.New(""),
+				}
+				continue
 			}
 
 			ts := keysDb.TxPipeline()
@@ -242,7 +266,6 @@ func DBWorker(queryChan <-chan account.DatabaseQuery) {
 				Result: freeKeys[0],
 				Err:    err,
 			}
-			return
 		case "getKeysList":
 			bindedKeys, err := keysDb.SMembers(ctx, query.Query).Result()
 
@@ -252,21 +275,18 @@ func DBWorker(queryChan <-chan account.DatabaseQuery) {
 					Result: "",
 					Err:    err,
 				}
-				return
 			}
 
 			query.ReplyChan <- account.DatabaseAnswer{
 				Result: strings.Join(bindedKeys, ","),
 				Err:    nil,
 			}
-			return
 		case "getBalance":
 			balance, err := balanceDb.Get(ctx, query.Query).Result()
 			query.ReplyChan <- account.DatabaseAnswer{
 				Result: balance,
 				Err:    err,
 			}
-			return
 		}
 	}
 

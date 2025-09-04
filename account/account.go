@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 type RedisAccount struct {
@@ -36,7 +37,7 @@ type DatabaseAnswer struct {
 	Err    error
 }
 
-func (r *RedisAccount) AccountInit(queryChan chan DatabaseQuery) {
+func (r *RedisAccount) AccountInit(queryChan chan DatabaseQuery) *RedisAccount {
 
 	query := DatabaseQuery{
 		UserID:    r.Userid,
@@ -59,18 +60,27 @@ func (r *RedisAccount) AccountInit(queryChan chan DatabaseQuery) {
 		accountData, err := json.Marshal(newAcc)
 		if err != nil {
 			fmt.Println("Error marshaling account:", err)
-			return
+			return r
 		}
 
-		query = DatabaseQuery{
+		var wg sync.WaitGroup
+		wg.Add(1)
+		query := DatabaseQuery{
 			UserID:    r.Userid,
 			QueryType: "setAccDB",
 			Query:     string(accountData),
 			ReplyChan: make(chan DatabaseAnswer),
 		}
-		queryChan <- query
-		answer = <-query.ReplyChan
+		go func(dbquery DatabaseQuery) {
+			queryChan <- query
+			wg.Done()
+		}(query)
 
+		wg.Wait()
+
+		fmt.Println("Waing setting account")
+		answer := <-query.ReplyChan
+		fmt.Println("Account setted")
 		if answer.Err != nil {
 			fmt.Println("Error saving account to Redis:", err)
 		}
@@ -81,21 +91,30 @@ func (r *RedisAccount) AccountInit(queryChan chan DatabaseQuery) {
 		r.SharedKeys = []string{}
 		r.Active = newAcc.Active
 
-		return
+		return r
 	} else {
-		err := json.Unmarshal([]byte(answer.Result), &r)
+		currDbAcc := DBAccount{}
+		err := json.Unmarshal([]byte(answer.Result), &currDbAcc)
 		if err != nil {
 			fmt.Println("Ошибка парсинга данных из бд")
 		}
 
-		query = DatabaseQuery{
+		r.Tariff = currDbAcc.Tariff
+		r.Active = currDbAcc.Active
+
+		query := DatabaseQuery{
 			UserID:    r.Userid,
 			QueryType: "getBalance",
 			Query:     "",
 			ReplyChan: make(chan DatabaseAnswer),
 		}
 		queryChan <- query
-		answer = <-query.ReplyChan
+		answer := <-query.ReplyChan
+
+		if answer.Result == "" {
+			answer.Result = "0"
+		}
+
 		balance, err := strconv.ParseInt(answer.Result, 10, 64)
 		if err != nil {
 			fmt.Println("Ошибка преобразования баланса:", err)
@@ -104,18 +123,19 @@ func (r *RedisAccount) AccountInit(queryChan chan DatabaseQuery) {
 			r.Balance = balance
 		}
 
-		query = DatabaseQuery{
+		queryKeyList := DatabaseQuery{
 			UserID:    r.Userid,
 			QueryType: "getKeysList",
 			Query:     fmt.Sprintf("%d", r.Userid),
 			ReplyChan: make(chan DatabaseAnswer),
 		}
-		queryChan <- query
-		answer = <-query.ReplyChan
+		queryChan <- queryKeyList
+		answergetKeyList := <-queryKeyList.ReplyChan
 
-		r.SharedKeys = strings.Split(answer.Result, ",")
+		r.SharedKeys = strings.Split(answergetKeyList.Result, ",")
 		r.Adblocker = false
-		r.Active = len(strings.Split(answer.Result, ",")) == 0
+		r.Active = len(strings.Split(answergetKeyList.Result, ",")) == 0
+		return r
 	}
 }
 
@@ -156,7 +176,7 @@ func (r *RedisAccount) GetSharedKey(queryChan chan DatabaseQuery) []string {
 		answer := <-query.ReplyChan
 
 		if len(strings.Split(answer.Result, ",")) == 0 {
-			r.SharedKeys = r.addKey(queryChan)
+			r.SharedKeys = []string{r.AddKey(queryChan)}
 		} else {
 			r.SharedKeys = strings.Split(answer.Result, ",")
 		}
@@ -185,7 +205,7 @@ func (r *RedisAccount) ToggleVpn() (bool, error) {
 	return r.Active, nil
 }
 
-func (r *RedisAccount) addKey(queryChan chan DatabaseQuery) []string {
+func (r *RedisAccount) AddKey(queryChan chan DatabaseQuery) string {
 
 	query := DatabaseQuery{
 		UserID:    r.Userid,
@@ -198,6 +218,5 @@ func (r *RedisAccount) addKey(queryChan chan DatabaseQuery) []string {
 	answer := <-query.ReplyChan
 
 	r.SharedKeys = append(r.SharedKeys, answer.Result)
-
-	return r.SharedKeys
+	return answer.Result
 }

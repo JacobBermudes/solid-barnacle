@@ -59,16 +59,18 @@ func (m MessageCreator) BalanceEditMsg() tgbotapi.MessageConfig {
 }
 
 func (m MessageCreator) VpnConnectMsg(currentKeys []string) tgbotapi.MessageConfig {
+
 	msg := tgbotapi.NewMessage(0, "")
 	if len(currentKeys) == 0 {
 		msg.Text = ""
 	} else {
-		for key := range currentKeys {
-			msg.Text = msg.Text + fmt.Sprintf("\n\nКлюч подключения <code>%d/code>\n\n", key)
+		for _, vpnKey := range currentKeys {
+			msg.Text = msg.Text + fmt.Sprintf("\n\nКлюч подключения `%s`\n\n", vpnKey)
 		}
 		msg.Text = msg.Text + "\n\nДля быстрого подключения скопируйте ключ подключения и вставьте в приложение Amnezia VPN!\n"
 	}
-	msg.Text = "Для более детальной поддержки выберите операционнкую систему: \n\n"
+	msg.ParseMode = "Markdown"
+	msg.Text = msg.Text + "\n\nДля более получения информации по подключению выберите операционную систему: \n\n"
 	msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("Android", "androidHelpMsg"),
@@ -83,7 +85,7 @@ func (m MessageCreator) VpnConnectMsg(currentKeys []string) tgbotapi.MessageConf
 			tgbotapi.NewInlineKeyboardButtonData("Linux", "linuxHelpMsg"),
 		),
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("Добавить ключ", "vpnConnectMsg"),
+			tgbotapi.NewInlineKeyboardButtonData("Добавить ключ", "addkey"),
 		),
 	)
 
