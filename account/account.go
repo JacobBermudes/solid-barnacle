@@ -85,7 +85,27 @@ func (r *RedisAccount) AccountInit(queryChan chan DatabaseQuery) *RedisAccount {
 			fmt.Println("Error saving account to Redis:", err)
 		}
 
-		r.Balance = 0
+		queryBalance := DatabaseQuery{
+			UserID:    r.Userid,
+			QueryType: "getBalance",
+			Query:     fmt.Sprintf("%d", r.Userid),
+			ReplyChan: make(chan DatabaseAnswer),
+		}
+		queryChan <- queryBalance
+		answerBalance := <-queryBalance.ReplyChan
+
+		if answerBalance.Result == "" {
+			answerBalance.Result = "0"
+		}
+
+		balance, err := strconv.ParseInt(answerBalance.Result, 10, 64)
+		if err != nil {
+			fmt.Println("Ошибка преобразования баланса:", err)
+			r.Balance = 0
+		} else {
+			r.Balance = balance
+		}
+
 		r.Tariff = newAcc.Tariff
 		r.Adblocker = false
 		r.SharedKeys = []string{}
@@ -105,7 +125,7 @@ func (r *RedisAccount) AccountInit(queryChan chan DatabaseQuery) *RedisAccount {
 		query := DatabaseQuery{
 			UserID:    r.Userid,
 			QueryType: "getBalance",
-			Query:     "",
+			Query:     fmt.Sprintf("%d", r.Userid),
 			ReplyChan: make(chan DatabaseAnswer),
 		}
 		queryChan <- query

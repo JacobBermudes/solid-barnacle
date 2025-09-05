@@ -151,11 +151,6 @@ func main() {
 								}
 								referal.TopupAccount(30, queryChan)
 							}
-
-							_, err := accountReader.TopupAccount(30, queryChan)
-							if err != nil {
-								log.Printf("Ошибка пополнения баланса новому пользователю по реферальной ссылке: %v", err)
-							}
 						}
 
 					}
