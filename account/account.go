@@ -134,7 +134,7 @@ func (r *RedisAccount) AccountInit(queryChan chan DatabaseQuery) *RedisAccount {
 
 		r.SharedKeys = strings.Split(answergetKeyList.Result, ",")
 		r.Adblocker = false
-		r.Active = len(strings.Split(answergetKeyList.Result, ",")) == 0
+		r.Active = len(strings.Split(answergetKeyList.Result, ",")) >= 0
 		return r
 	}
 }
