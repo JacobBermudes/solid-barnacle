@@ -195,9 +195,28 @@ func (r *RedisAccount) GetActive() string {
 	return desc
 }
 
-func (r *RedisAccount) TopupAccount(sum int64) (int64, error) {
+func (r *RedisAccount) TopupAccount(sum int64, queryChan chan DatabaseQuery) (int64, error) {
 	r.Balance += sum
-	return sum, nil
+	query := DatabaseQuery{
+		UserID:    r.Userid,
+		QueryType: "topupBalance",
+		Query:     fmt.Sprintf("%d", sum),
+		ReplyChan: make(chan DatabaseAnswer),
+	}
+
+	queryChan <- query
+	answer := <-query.ReplyChan
+
+	if answer.Err != nil {
+		return 0, answer.Err
+	}
+
+	curBalance, err := strconv.ParseInt(answer.Result, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+
+	return curBalance, nil
 }
 
 func (r *RedisAccount) ToggleVpn() (bool, error) {

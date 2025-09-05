@@ -33,7 +33,7 @@ type RedisReader interface {
 	GetActive() string
 	GetSharedKey(queryChan chan account.DatabaseQuery) []string
 	ToggleVpn() (bool, error)
-	TopupAccount(int64) (int64, error)
+	TopupAccount(int64, chan account.DatabaseQuery) (int64, error)
 	AddKey(queryChan chan account.DatabaseQuery) string
 }
 
@@ -120,6 +120,7 @@ func main() {
 				if update.Message.IsCommand() {
 
 					refArgs := update.Message.CommandArguments()
+					fmt.Printf("\nRef args: %s", refArgs)
 					if strings.HasPrefix(refArgs, "ref") {
 						refID := strings.TrimPrefix(refArgs, "ref")
 						if refID != fmt.Sprintf("%d", accountReader.GetUserID()) {
@@ -139,7 +140,7 @@ func main() {
 							answer := <-query.ReplyChan
 
 							if answer.Err != nil || answer.Result == "" {
-								_, err := accountReader.TopupAccount(30)
+								_, err := accountReader.TopupAccount(30, queryChan)
 								if err != nil {
 									log.Printf("Ошибка пополнения баланса новому пользователю по реферальной ссылке: %v", err)
 								}
@@ -148,10 +149,10 @@ func main() {
 									Userid:   func() int64 { id, _ := strconv.ParseInt(refID, 10, 64); return id }(),
 									Username: "",
 								}
-								referal.TopupAccount(50)
+								referal.TopupAccount(30, queryChan)
 							}
 
-							_, err := accountReader.TopupAccount(30)
+							_, err := accountReader.TopupAccount(30, queryChan)
 							if err != nil {
 								log.Printf("Ошибка пополнения баланса новому пользователю по реферальной ссылке: %v", err)
 							}
@@ -202,7 +203,7 @@ func menuCallbackHandler(data string, acc RedisReader, queryChan chan account.Da
 		return messenger.BalanceEditMsg(), false
 	case "topup_fiat":
 
-		sum, err := acc.TopupAccount(100)
+		sum, err := acc.TopupAccount(100, queryChan)
 		if err != nil {
 			return tgbotapi.NewMessage(0, "Ошибка пополнения баланса!"), true
 		}
@@ -210,7 +211,7 @@ func menuCallbackHandler(data string, acc RedisReader, queryChan chan account.Da
 		return tgbotapi.NewMessage(0, fmt.Sprintf("Баланс успешно пополнен на %d рублей.", sum)), true
 	case "topup_crypto":
 
-		sum, err := acc.TopupAccount(100)
+		sum, err := acc.TopupAccount(100, queryChan)
 		if err != nil {
 			return tgbotapi.NewMessage(0, "Ошибка пополнения баланса!"), true
 		}
