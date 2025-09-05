@@ -111,7 +111,7 @@ func main() {
 					key_sender = 0
 
 					msg := tgbotapi.NewMessage(update.FromChat().ID, "Ключ успешно добавлен")
-					msg.ChatID = update.Message.SenderChat.ID
+					msg.ChatID = update.FromChat().ID
 
 					bot.Send(msg)
 				}
@@ -145,14 +145,16 @@ func menuCallbackHandler(data string, acc RedisReader, queryChan chan account.Da
 
 	switch data {
 	case "addkey":
+		msg := tgbotapi.NewMessage(0, "")
 		answer := acc.AddKey(queryChan)
-		text := ""
 		if answer == "Ключей как будто бы и нет..." {
-			text = "Ключей как будто бы и нет..."
+			msg.Text = "Ключей как будто бы и нет..."
 		} else {
-			text = fmt.Sprintf("Ключ <code>%s</code>успешно привязан к аккаунту!", answer)
+			msg.Text = fmt.Sprintf("Ключ `%s` >успешно привязан к аккаунту!", answer)
+			msg.ParseMode = "Markdown"
+
 		}
-		return tgbotapi.NewMessage(0, text), true
+		return msg, true
 	case "vpnConnect":
 		return messenger.VpnConnectMsg(acc.GetSharedKey(queryChan)), false
 	case "toggleVpn":
@@ -191,7 +193,7 @@ func commandHandler(command string, acc RedisReader, queryChan chan account.Data
 	switch command {
 	case "addkey":
 		key_sender = acc.GetUserID()
-		return tgbotapi.NewMessage(0, "Ожидаем ключа без VPN://")
+		return tgbotapi.NewMessage(0, "Ожидаем ключа включая VPN://")
 	case "start":
 		acc.AccountInit(queryChan)
 		return messenger.HomeMsg(acc.GetUsername(), acc.GetBalance(), acc.GetTariff(), acc.GetAdblocker(), acc.GetActive())

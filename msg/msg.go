@@ -62,16 +62,21 @@ func (m MessageCreator) VpnConnectMsg(currentKeys []string) tgbotapi.MessageConf
 
 	msg := tgbotapi.NewMessage(0, "")
 	if len(currentKeys) == 0 {
-		msg.Text = ""
+		msg.Text = "Ключи подключения отсутствуют. Пожалуйста добавьте ключ для подключения к VPN."
 	} else {
 		for _, vpnKey := range currentKeys {
-			msg.Text = msg.Text + fmt.Sprintf("\n\nКлюч подключения `%s`\n\n", vpnKey)
+			msg.Text = msg.Text + fmt.Sprintf("\nКлюч подключения: `%s`", vpnKey)
 		}
-		msg.Text = msg.Text + "\n\nДля быстрого подключения скопируйте ключ подключения и вставьте в приложение Amnezia VPN!\n"
+		msg.Text = msg.Text + "\n\nДля быстрого подключения скопируйте ключ подключения и вставьте в приложении!\n"
 	}
-	msg.ParseMode = "Markdown"
-	msg.Text = msg.Text + "\n\nДля более получения информации по подключению выберите операционную систему: \n\n"
+
+	msg.Text = msg.Text + "Ссылки на приложение:\n[IPhone/iPad](https://apps.apple.com/ru/app/defaultvpn/id6744725017)\n[Android](https://play.google.com/store/apps/details?id=org.amnezia.vpn)\n[Windows](https://github.com/amnezia-vpn/amnezia-client/releases/download/4.8.9.2/AmneziaVPN_4.8.9.2_windows_x64.exe)\n[Linux](https://github.com/amnezia-vpn/amnezia-client/releases/download/4.8.9.2/AmneziaVPN_4.8.9.2_linux_x64.tar.zip)\n\n"
+
+	msg.Text = msg.Text + "\nДля получения информации по подключению выберите вашу операционную систему: \n\n"
 	msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("Добавить ключ", "addkey"),
+		),
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("Android", "androidHelpMsg"),
 		),
@@ -79,15 +84,16 @@ func (m MessageCreator) VpnConnectMsg(currentKeys []string) tgbotapi.MessageConf
 			tgbotapi.NewInlineKeyboardButtonData("I'Os", "iosHelpMsg"),
 		),
 		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("I'Os (устаревший способ)", "iosHelpMsg"),
+		),
+		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("Windows", "windowsHelpMsg"),
 		),
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("Linux", "linuxHelpMsg"),
 		),
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("Добавить ключ", "addkey"),
-		),
 	)
+	msg.ParseMode = "Markdown"
 
 	return msg
 }
