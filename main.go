@@ -8,6 +8,7 @@ import (
 	"mmcvpn/account"
 	"mmcvpn/msg"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/go-redis/redis/v8"
@@ -118,7 +119,45 @@ func main() {
 
 				if update.Message.IsCommand() {
 
-					fmt.Printf("\n%s", update.Message.CommandArguments())
+					refArgs := update.Message.CommandArguments()
+					if strings.HasPrefix(refArgs, "ref") {
+						refID := strings.TrimPrefix(refArgs, "ref")
+						if refID != fmt.Sprintf("%d", accountReader.GetUserID()) {
+							msg := tgbotapi.NewMessage(update.FromChat().ID, "Спасибо за регистрацию по реферальной ссылке! Вам и вашему другу начислено по 30 рублей на баланс для тестирования сервиса.")
+							msg.ChatID = update.FromChat().ID
+
+							bot.Send(msg)
+
+							query := account.DatabaseQuery{
+								UserID:    0,
+								QueryType: "getAccDB",
+								Query:     fmt.Sprintf("%d", accountReader.GetUserID()),
+								ReplyChan: make(chan account.DatabaseAnswer),
+							}
+
+							queryChan <- query
+							answer := <-query.ReplyChan
+
+							if answer.Err != nil || answer.Result == "" {
+								_, err := accountReader.TopupAccount(30)
+								if err != nil {
+									log.Printf("Ошибка пополнения баланса новому пользователю по реферальной ссылке: %v", err)
+								}
+
+								referal := account.RedisAccount{
+									Userid:   func() int64 { id, _ := strconv.ParseInt(refID, 10, 64); return id }(),
+									Username: "",
+								}
+								referal.TopupAccount(50)
+							}
+
+							_, err := accountReader.TopupAccount(30)
+							if err != nil {
+								log.Printf("Ошибка пополнения баланса новому пользователю по реферальной ссылке: %v", err)
+							}
+						}
+
+					}
 
 					msg := commandHandler(update.Message.Command(), accountReader, queryChan)
 					msg.ChatID = update.FromChat().ID
@@ -285,6 +324,19 @@ func DBWorker(queryChan <-chan account.DatabaseQuery) {
 			balance, err := balanceDb.Get(ctx, query.Query).Result()
 			query.ReplyChan <- account.DatabaseAnswer{
 				Result: balance,
+				Err:    err,
+			}
+		case "topupBalance":
+			refferalBonus, _ := strconv.ParseInt(query.Query, 10, 64)
+			newValue, err := balanceDb.IncrBy(ctx, fmt.Sprintf("%d", query.UserID), refferalBonus).Result()
+
+			if err != nil {
+				fmt.Println("Ошибка пополнения баланса юзера!")
+
+			}
+
+			query.ReplyChan <- account.DatabaseAnswer{
+				Result: fmt.Sprintf("%d", newValue),
 				Err:    err,
 			}
 		}
