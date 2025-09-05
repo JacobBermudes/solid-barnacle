@@ -118,6 +118,8 @@ func main() {
 
 				if update.Message.IsCommand() {
 
+					fmt.Printf("\n%s", update.Message.CommandArguments())
+
 					msg := commandHandler(update.Message.Command(), accountReader, queryChan)
 					msg.ChatID = update.FromChat().ID
 
