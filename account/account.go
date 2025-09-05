@@ -214,6 +214,10 @@ func (r *RedisAccount) AddKey(queryChan chan DatabaseQuery) string {
 		ReplyChan: make(chan DatabaseAnswer),
 	}
 
+	if len(r.GetSharedKey(queryChan)) == 2 {
+		return "Максимильное количество ключей"
+	}
+
 	queryChan <- query
 	answer := <-query.ReplyChan
 

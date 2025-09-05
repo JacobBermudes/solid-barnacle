@@ -147,8 +147,8 @@ func menuCallbackHandler(data string, acc RedisReader, queryChan chan account.Da
 	case "addkey":
 		msg := tgbotapi.NewMessage(0, "")
 		answer := acc.AddKey(queryChan)
-		if answer == "Ключей как будто бы и нет..." {
-			msg.Text = "Ключей как будто бы и нет..."
+		if answer == "Ключей как будто бы и нет..." || answer == "Максимильное количество ключей" {
+			msg.Text = answer
 		} else {
 			msg.Text = fmt.Sprintf("Ключ `%s` >успешно привязан к аккаунту!", answer)
 			msg.ParseMode = "Markdown"
