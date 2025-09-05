@@ -13,11 +13,10 @@ func (m MessageCreator) HomeMsg(username string, balance int64, tariff string, a
 	msg := tgbotapi.NewMessage(0, "")
 
 	msg.Text = "Бот управления доступом Madjahead VPN" + "\n\n" +
-		"Пользователь " + username + "\n\n" +
-		"Твой баланс: " + fmt.Sprintf("%d", balance) + "\n\n" +
+		"Пользователь " + username + "!\n\n" +
+		"Твой баланс: " + fmt.Sprintf("%d", balance) + "\n" +
 		"Тариф: " + tariff + "\n" +
-		"Статус доступа к VPN: " + active + "\n\n" +
-		"Блокировка рекламы: " + fmt.Sprintf("%t", adblocker) + "\n"
+		"Статус доступа к VPN: " + active + "\n"
 
 	msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
@@ -27,10 +26,7 @@ func (m MessageCreator) HomeMsg(username string, balance int64, tariff string, a
 			tgbotapi.NewInlineKeyboardButtonData("🏦 Баланс", "balance"),
 		),
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("🧰 Инструкция по подключению", "instruction"),
-		),
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("🤝 Пригласить друга", "referral"),
+			tgbotapi.NewInlineKeyboardButtonData("💵Акция «Приведи друга»💵", "referral"),
 		),
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("💸 Пожертвовать", "donate"),
@@ -67,10 +63,10 @@ func (m MessageCreator) VpnConnectMsg(currentKeys []string) tgbotapi.MessageConf
 		for _, vpnKey := range currentKeys {
 			msg.Text = msg.Text + fmt.Sprintf("\nКлюч подключения: `%s`", vpnKey)
 		}
-		msg.Text = msg.Text + "\n\nДля быстрого подключения скопируйте ключ подключения и вставьте в приложении!\n"
+		msg.Text = msg.Text + "\n\nДля быстрого подключения скопируйте ключ подключения и вставьте в приложении!\n\n"
 	}
 
-	msg.Text = msg.Text + "Ссылки на приложение:\n[IPhone/iPad](https://apps.apple.com/ru/app/defaultvpn/id6744725017)\n[Android](https://play.google.com/store/apps/details?id=org.amnezia.vpn)\n[Windows](https://github.com/amnezia-vpn/amnezia-client/releases/download/4.8.9.2/AmneziaVPN_4.8.9.2_windows_x64.exe)\n[Linux](https://github.com/amnezia-vpn/amnezia-client/releases/download/4.8.9.2/AmneziaVPN_4.8.9.2_linux_x64.tar.zip)\n\n"
+	msg.Text = msg.Text + "Ссылки на приложение:\n	[IPhone/iPad](https://apps.apple.com/ru/app/defaultvpn/id6744725017)\n	[Android](https://play.google.com/store/apps/details?id=org.amnezia.vpn)\n	[Windows](https://github.com/amnezia-vpn/amnezia-client/releases/download/4.8.9.2/AmneziaVPN_4.8.9.2_windows_x64.exe)\n	[Linux](https://github.com/amnezia-vpn/amnezia-client/releases/download/4.8.9.2/AmneziaVPN_4.8.9.2_linux_x64.tar.zip)\n\n"
 
 	msg.Text = msg.Text + "\nДля получения информации по подключению выберите вашу операционную систему: \n\n"
 	msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
@@ -94,6 +90,7 @@ func (m MessageCreator) VpnConnectMsg(currentKeys []string) tgbotapi.MessageConf
 		),
 	)
 	msg.ParseMode = "Markdown"
+	msg.DisableWebPagePreview = true
 
 	return msg
 }

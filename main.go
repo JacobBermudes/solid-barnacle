@@ -124,17 +124,8 @@ func main() {
 					if _, err := bot.Send(msg); err != nil {
 						log.Printf("Ошибка отправки сообщения в чат: %v", err)
 					}
-				} else {
-
-					//accountReader.AccountInit(queryChan)
-
-					homeMsg := tgbotapi.NewMessage(0, "Test")
-					homeMsg.ChatID = update.FromChat().ID
-
-					if _, err := bot.Send(homeMsg); err != nil {
-						log.Printf("Ошибка отправки сообщения в чат: %v", err)
-					}
 				}
+
 			}
 		}(update)
 
