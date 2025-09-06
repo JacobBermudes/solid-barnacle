@@ -78,23 +78,31 @@ func (m MessageCreator) VpnConnectMsg(currentKeys []string) tgbotapi.MessageConf
 			tgbotapi.NewInlineKeyboardButtonData("Добавить ключ", "addkey"),
 		),
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("Android", "androidHelpMsg"),
-		),
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("I'Os", "iosHelpMsg"),
-		),
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("I'Os (устаревший способ)", "iosHelpMsg"),
-		),
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("Windows", "windowsHelpMsg"),
-		),
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("Linux", "linuxHelpMsg"),
+			tgbotapi.NewInlineKeyboardButtonData("Помощь с подключением", "helpMenu"),
 		),
 	)
 	msg.ParseMode = "Markdown"
 	msg.DisableWebPagePreview = true
 
 	return msg
+}
+
+func (m MessageCreator) HelpMenuMsg() tgbotapi.MessageConfig {
+	msg := tgbotapi.NewMessage(0, "Для получения дальнейшей помощи по настройке VPN-соединения, пожалуйста, выберите вашу операционную систему:\n\n")
+	msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonURL("iPhone/iPad", "https://madjahead.com/help/ios"),
+		),
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonURL("Android", "https://madjahead.com/help/android"),
+		),
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonURL("Windows", "https://madjahead.com/help/windows"),
+		),
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonURL("Linux", "https://madjahead.com/help/linux"),
+		),
+	)
+	return msg
+
 }

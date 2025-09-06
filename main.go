@@ -19,6 +19,7 @@ type mmcMsg interface {
 	HomeMsg(username string, balance int64, tariff string, adblocker bool, active string) tgbotapi.MessageConfig
 	VpnConnectMsg(currentKeys []string) tgbotapi.MessageConfig
 	BalanceEditMsg() tgbotapi.MessageConfig
+	HelpMenuMsg() tgbotapi.MessageConfig
 }
 
 var messenger mmcMsg = msg.MessageCreator{}
@@ -185,8 +186,9 @@ func menuCallbackHandler(data string, acc RedisReader, queryChan chan account.Da
 		return msg, true
 	case "vpnConnect":
 		return messenger.VpnConnectMsg(acc.GetSharedKey(queryChan)), false
+	case "helpMenu":
+		return messenger.HelpMenuMsg(), false
 	case "balance":
-
 		return messenger.BalanceEditMsg(), false
 	case "topup_fiat":
 
@@ -209,7 +211,7 @@ func menuCallbackHandler(data string, acc RedisReader, queryChan chan account.Da
 		msg.ParseMode = "Markdown"
 		return msg, false
 	case "donate":
-		msg := tgbotapi.NewMessage(0, "Если вам нравится наш VPN-сервис и вы хотите поддержать его развитие финансово, поддержка принимается по СБП `89826500255` на БКС Банк :) ")
+		msg := tgbotapi.NewMessage(0, "Если вам нравится наш VPN-сервис и вы хотите поддержать его развитие финансово, поддержка принимается по СБП на ТБанк :) ")
 		msg.ParseMode = "Markdown"
 		return msg, true
 	}
