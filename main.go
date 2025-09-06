@@ -125,7 +125,7 @@ func main() {
 					if strings.HasPrefix(refArgs, "ref") {
 						refID := strings.TrimPrefix(refArgs, "ref")
 						if refID != fmt.Sprintf("%d", accountReader.GetUserID()) {
-							msg := tgbotapi.NewMessage(update.FromChat().ID, "Спасибо за регистрацию по реферальной ссылке! Вам и вашему другу начислено по 30 рублей на баланс для тестирования сервиса.")
+							msg := tgbotapi.NewMessage(update.FromChat().ID, "Спасибо за регистрацию по реферальной ссылке! Вам и вашему другу будет начислено по 10 рублей на баланс для тестирования сервиса.")
 							msg.ChatID = update.FromChat().ID
 
 							bot.Send(msg)
@@ -141,7 +141,7 @@ func main() {
 							answer := <-query.ReplyChan
 
 							if answer.Err != nil || answer.Result == "" {
-								_, err := accountReader.TopupAccount(30, queryChan)
+								_, err := accountReader.TopupAccount(10, queryChan)
 								if err != nil {
 									log.Printf("Ошибка пополнения баланса новому пользователю по реферальной ссылке: %v", err)
 								}
@@ -150,7 +150,7 @@ func main() {
 									Userid:   func() int64 { id, _ := strconv.ParseInt(refID, 10, 64); return id }(),
 									Username: "",
 								}
-								referal.TopupAccount(30, queryChan)
+								referal.TopupAccount(10, queryChan)
 							}
 						}
 
