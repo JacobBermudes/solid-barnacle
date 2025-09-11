@@ -60,12 +60,12 @@ func (m MessageCreator) VpnConnectMsg(currentKeys []string) tgbotapi.MessageConf
 	if len(currentKeys) == 0 {
 		msg.Text = "Ключи подключения отсутствуют. Пожалуйста добавьте ключ для подключения к VPN."
 	} else {
-		for _, vpnKey := range currentKeys {
+		for i, vpnKey := range currentKeys {
 			if vpnKey == "" {
 				msg.Text = "Ключи подключения отсутствуют. Пожалуйста добавьте ключ для подключения к VPN."
 				break
 			}
-			msg.Text = msg.Text + fmt.Sprintf("Ключ подключения: ```%s```\n", vpnKey)
+			msg.Text = msg.Text + fmt.Sprintf("%d. Ключ подключения: ```%s```\n", i, vpnKey)
 		}
 		msg.Text = msg.Text + "\n\nДля быстрой настройки VPN-подключения скопируйте ключ подключения и вставьте в приложение!\n\n"
 	}

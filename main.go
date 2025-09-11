@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"mmcvpn/account"
+	"mmcvpn/banking"
 	"mmcvpn/msg"
 	"os"
 	"strconv"
@@ -42,6 +44,8 @@ var key_sender int64
 
 func main() {
 
+	ctx := context.Background()
+
 	botToken := os.Getenv("TELEGRAM_BOT_TOKEN")
 	if botToken == "" {
 		log.Fatal("TELEGRAM_BOT_TOKEN environment variable not set")
@@ -57,7 +61,9 @@ func main() {
 	updates := bot.GetUpdatesChan(u)
 
 	queryChan := make(chan account.DatabaseQuery, 100)
-	go DBWorker(queryChan)
+	go DBWorker(queryChan, ctx)
+
+	go banking.Bank{}.StartMakePayments(queryChan, ctx)
 
 	for update := range updates {
 
@@ -235,9 +241,8 @@ func commandHandler(command string, acc RedisReader, queryChan chan account.Data
 	return tgbotapi.NewMessage(0, "Ошибка разбора команды.Обратитесь в поддержку")
 }
 
-func DBWorker(queryChan <-chan account.DatabaseQuery) {
+func DBWorker(queryChan <-chan account.DatabaseQuery, ctx context.Context) {
 
-	ctx := context.Background()
 	var rdbpass = os.Getenv("REDIS_PASS")
 
 	var accountDb = redis.NewClient(&redis.Options{
@@ -266,6 +271,18 @@ func DBWorker(queryChan <-chan account.DatabaseQuery) {
 			query.ReplyChan <- account.DatabaseAnswer{
 				Result: "Ключ успешно добавлен!",
 				Err:    nil,
+			}
+		case "getAccountsIDs":
+			ids, _ := accountDb.Keys(ctx, "*").Result()
+
+			stringedSlice, err := json.Marshal(ids)
+			if err != nil {
+				fmt.Println("Ошибка парсинга списка всех пользователей:", err)
+			}
+
+			query.ReplyChan <- account.DatabaseAnswer{
+				Result: string(stringedSlice),
+				Err:    err,
 			}
 		case "getAccDB":
 			result, err := accountDb.Get(ctx, query.Query).Result()
@@ -334,6 +351,25 @@ func DBWorker(queryChan <-chan account.DatabaseQuery) {
 			query.ReplyChan <- account.DatabaseAnswer{
 				Result: fmt.Sprintf("%d", newValue),
 				Err:    err,
+			}
+		case "decrBalance":
+			decrValue, _ := strconv.ParseInt(query.Query, 10, 64)
+			newValue, err := balanceDb.DecrBy(ctx, fmt.Sprintf("%d", query.UserID), decrValue).Result()
+
+			if err != nil {
+				fmt.Println("Ошибка списания баланса юзера!")
+
+			}
+
+			query.ReplyChan <- account.DatabaseAnswer{
+				Result: fmt.Sprintf("%d", newValue),
+				Err:    err,
+			}
+		default:
+			fmt.Println("Неизвестный тип запроса к базе данных")
+			query.ReplyChan <- account.DatabaseAnswer{
+				Result: "",
+				Err:    errors.New("неизвестный тип запроса к базе данных"),
 			}
 		}
 	}
