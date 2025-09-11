@@ -236,6 +236,8 @@ func commandHandler(command string, acc RedisReader, queryChan chan account.Data
 	case "start":
 		acc.AccountInit(queryChan)
 		return messenger.HomeMsg(acc.GetUsername(), acc.GetBalance(), acc.GetTariff(), acc.GetAdblocker(), acc.GetActive())
+	case "connect":
+		return messenger.VpnConnectMsg(acc.GetSharedKey(queryChan))
 	}
 
 	return tgbotapi.NewMessage(0, "Ошибка разбора команды.Обратитесь в поддержку")

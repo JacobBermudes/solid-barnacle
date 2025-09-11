@@ -11,7 +11,7 @@ import (
 type Bank struct{}
 
 func (b Bank) StartMakePayments(queryChan chan account.DatabaseQuery, ctx context.Context) {
-	ticker := time.NewTicker(24 * time.Hour)
+	ticker := time.NewTicker(5 * time.Minute)
 	defer ticker.Stop()
 
 	for {
