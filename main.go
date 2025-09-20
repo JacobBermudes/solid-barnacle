@@ -218,7 +218,7 @@ func menuCallbackHandler(data string, acc RedisReader, queryChan chan account.Da
 
 		return tgbotapi.NewMessage(0, fmt.Sprintf("Баланс успешно пополнен на %d рублей.", sum)), true
 	case "referral":
-		return messenger.RefererMsg(fmt.Sprintf("%d", acc.GetUserID())), true
+		return messenger.RefererMsg(fmt.Sprintf("%d", acc.GetUserID())), false
 	case "donate":
 		msg := tgbotapi.NewMessage(0, "Если вам нравится наш VPN-сервис и вы хотите поддержать его развитие финансово, поддержка принимается по СБП на ТБанк :) ")
 		msg.ParseMode = "Markdown"
