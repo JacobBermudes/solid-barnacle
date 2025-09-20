@@ -20,7 +20,7 @@ import (
 type mmcMsg interface {
 	HomeMsg(username string, balance int64, tariff string, adblocker bool, active string) tgbotapi.MessageConfig
 	VpnConnectMsg(currentKeys []string) tgbotapi.MessageConfig
-	BalanceEditMsg() tgbotapi.MessageConfig
+	PaymentMenuMsg() tgbotapi.MessageConfig
 	HelpMenuMsg() tgbotapi.MessageConfig
 	RefererMsg(userid string) tgbotapi.MessageConfig
 }
@@ -199,8 +199,8 @@ func menuCallbackHandler(data string, acc RedisReader, queryChan chan account.Da
 		return messenger.VpnConnectMsg(acc.GetSharedKey(queryChan)), false
 	case "helpMenu":
 		return messenger.HelpMenuMsg(), false
-	case "balance":
-		return messenger.BalanceEditMsg(), false
+	case "paymentMenu":
+		return messenger.PaymentMenuMsg(), false
 	case "topup_fiat":
 
 		sum, err := acc.TopupAccount(100, queryChan)

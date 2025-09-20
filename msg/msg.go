@@ -25,7 +25,7 @@ func (m MessageCreator) HomeMsg(username string, balance int64, tariff string, a
 			tgbotapi.NewInlineKeyboardButtonData("⚙️ Подключение к VPN", "vpnConnect"),
 		),
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("🏦 Баланс", "balance"),
+			tgbotapi.NewInlineKeyboardButtonData("🏦 Внесение оплаты за VPN", "paymentMenu"),
 		),
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("💵Акция «Приведи друга»💵", "referral"),
@@ -41,8 +41,15 @@ func (m MessageCreator) HomeMsg(username string, balance int64, tariff string, a
 	return msg
 }
 
-func (m MessageCreator) BalanceEditMsg() tgbotapi.MessageConfig {
-	msg := tgbotapi.NewMessage(0, "Это меню управления балансом. Вы можете пополнить баланс несколькими способами\n\n")
+func (m MessageCreator) PaymentMenuMsg() tgbotapi.MessageConfig {
+
+	msg := tgbotapi.NewMessage(0, "🎉 *Добро пожаловать в \"Кошелёк\"!*\n\n"+
+		"При первом запуске нашего бота мы автоматически создаём для вас персональный аккаунт в нашей системе. Вместе с ним появляется ваш *личный баланс* 💸\n\n"+
+		"🔹 *Как это работает?*\n"+
+		"- Ваш баланс привязан к аккаунту и хранится в нашей базе данных.\n"+
+		"- Пополнить баланс можно быстро и удобно через *СБП* (Систему быстрых платежей) — просто выберите нужную сумму и следуйте инструкциям.\n"+
+		"- Списание происходит автоматически согласно вашему тарифу.\n\n"+
+		"🔍 Хотите проверить баланс, пополнить счёт или узнать подробности о тарифе? Используйте кнопки ниже! 👇")
 
 	msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
