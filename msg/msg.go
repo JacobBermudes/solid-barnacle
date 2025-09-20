@@ -25,10 +25,10 @@ func (m MessageCreator) HomeMsg(username string, balance int64, tariff string, a
 			tgbotapi.NewInlineKeyboardButtonData("⚙️ Подключение к VPN", "vpnConnect"),
 		),
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("🏦 Внесение оплаты за VPN", "paymentMenu"),
+			tgbotapi.NewInlineKeyboardButtonData("💲 Внесение оплаты за VPN", "paymentMenu"),
 		),
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("💵Акция «Приведи друга»💵", "referral"),
+			tgbotapi.NewInlineKeyboardButtonData("💵 Акция «Приведи друга»", "referral"),
 		),
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("💸 Пожертвовать", "donate"),
@@ -41,17 +41,20 @@ func (m MessageCreator) HomeMsg(username string, balance int64, tariff string, a
 	return msg
 }
 
-func (m MessageCreator) PaymentMenuMsg() tgbotapi.MessageConfig {
+func (m MessageCreator) PaymentMenuMsg(username string, balance int64) tgbotapi.MessageConfig {
 
-	msg := tgbotapi.NewMessage(0, "🎉 *Раздел \"Внесения оплаты\"!*\n\n"+
+	walletData := fmt.Sprintf("Уважаемый %s! Ваш баланс: %d рублей.\n\n", username, balance)
+
+	msg := tgbotapi.NewMessage(0, "💲 *Внесение оплаты!*\n\n"+
+		walletData+
 		"- Ваш баланс привязан к аккаунту и хранится в нашей базе данных.\n"+
 		"- Пополнить баланс можно быстро и удобно через *СБП* (Систему быстрых платежей) — просто выберите нужную сумму и следуйте инструкциям.\n"+
-		"- Списание происходит автоматически согласно вашему тарифу из баланса на нашей базе данных.\n\n"+
+		"- Списание с баланса происходит автоматически согласно вашему тарифу.\n\n"+
 		"🔍 Хотите пополнить баланс или изменить тариф? Используйте кнопки ниже! 👇")
 	msg.ParseMode = "Markdown"
 	msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("Пополнить баланс банковской картой", "topup_fiat"),
+			tgbotapi.NewInlineKeyboardButtonData("Пополнить банковской картой", "topup_fiat"),
 			tgbotapi.NewInlineKeyboardButtonData("Пополнить криптовалютой", "topup_crypto"),
 		),
 		tgbotapi.NewInlineKeyboardRow(
