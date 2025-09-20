@@ -6,7 +6,9 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-type MessageCreator struct{}
+type MessageCreator struct {
+	BotAddress string
+}
 
 func (m MessageCreator) HomeMsg(username string, balance int64, tariff string, adblocker bool, active string) tgbotapi.MessageConfig {
 
@@ -65,7 +67,7 @@ func (m MessageCreator) VpnConnectMsg(currentKeys []string) tgbotapi.MessageConf
 				msg.Text = "Ключи подключения отсутствуют. Пожалуйста добавьте ключ для подключения к VPN."
 				break
 			}
-			msg.Text = msg.Text + fmt.Sprintf("%d. Ключ подключения: ```%s```\n", i, vpnKey)
+			msg.Text = msg.Text + fmt.Sprintf("%d. Ключ подключения: ```%s```\n", i+1, vpnKey)
 		}
 		msg.Text = msg.Text + "\n\nДля быстрой настройки VPN-подключения скопируйте ключ подключения и вставьте в приложение!\n\n"
 	}
@@ -105,4 +107,21 @@ func (m MessageCreator) HelpMenuMsg() tgbotapi.MessageConfig {
 	)
 	return msg
 
+}
+
+func (m MessageCreator) RefererMsg(userid string) tgbotapi.MessageConfig {
+	refLink := m.BotAddress + "?start=ref" + userid
+
+	msg := tgbotapi.NewMessage(0, "💵Акция «Приведи друга»💵\n\nПриглашайте друзей и получайте бонусы на баланс!\n\nЗа каждого приглашенного друга вы и ваш друг получит 10 рублей на баланс для тестирования сервиса.\n\nДля участия в акции просто поделитесь своей уникальной ссылкой приглашения:\n\n```"+refLink+"```\n\nЧем больше друзей вы пригласите, тем больше бонусов получите! Акция действует без ограничений по количеству приглашенных друзей.\n\nСпасибо, что выбираете наш VPN-сервис! Вместе мы сделаем интернет безопаснее и доступнее для всех.")
+
+	msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("Главное меню", "homePage"),
+			tgbotapi.NewInlineKeyboardButtonSwitch("Поделиться ссылкой", "Присоединяйся к использованию Madjahead VPN по моей ссылке и получи бонус! 🎁\nСсылка для подключения: "+refLink),
+		),
+	)
+
+	msg.ParseMode = "Markdown"
+
+	return msg
 }

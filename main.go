@@ -22,9 +22,12 @@ type mmcMsg interface {
 	VpnConnectMsg(currentKeys []string) tgbotapi.MessageConfig
 	BalanceEditMsg() tgbotapi.MessageConfig
 	HelpMenuMsg() tgbotapi.MessageConfig
+	RefererMsg(userid string) tgbotapi.MessageConfig
 }
 
-var messenger mmcMsg = msg.MessageCreator{}
+var messenger mmcMsg = msg.MessageCreator{
+	BotAddress: "https://t.me/mmcvpnbot",
+}
 
 type RedisReader interface {
 	AccountInit(queryChan chan account.DatabaseQuery) *account.RedisAccount
@@ -190,6 +193,8 @@ func menuCallbackHandler(data string, acc RedisReader, queryChan chan account.Da
 
 		}
 		return msg, true
+	case "homePage":
+		return messenger.HomeMsg(acc.GetUsername(), acc.GetBalance(), acc.GetTariff(), acc.GetAdblocker(), acc.GetActive()), false
 	case "vpnConnect":
 		return messenger.VpnConnectMsg(acc.GetSharedKey(queryChan)), false
 	case "helpMenu":
@@ -213,9 +218,7 @@ func menuCallbackHandler(data string, acc RedisReader, queryChan chan account.Da
 
 		return tgbotapi.NewMessage(0, fmt.Sprintf("Баланс успешно пополнен на %d рублей.", sum)), true
 	case "referral":
-		msg := tgbotapi.NewMessage(0, "💵Акция «Приведи друга»💵\n\nПриглашайте друзей и получайте бонусы на баланс!\n\nЗа каждого приглашенного друга вы и ваш друг получит 10 рублей на баланс для тестирования сервиса.\n\nДля участия в акции просто поделитесь своей уникальной ссылкой приглашения:\n\n`https://t.me/mmcvpnbot?start=ref"+fmt.Sprintf("%d", acc.GetUserID())+"`\n\nЧем больше друзей вы пригласите, тем больше бонусов получите! Акция действует без ограничений по количеству приглашенных друзей.\n\nСпасибо, что выбираете наш VPN-сервис! Вместе мы сделаем интернет безопаснее и доступнее для всех.")
-		msg.ParseMode = "Markdown"
-		return msg, true
+		return messenger.RefererMsg(fmt.Sprintf("%d", acc.GetUserID())), true
 	case "donate":
 		msg := tgbotapi.NewMessage(0, "Если вам нравится наш VPN-сервис и вы хотите поддержать его развитие финансово, поддержка принимается по СБП на ТБанк :) ")
 		msg.ParseMode = "Markdown"
