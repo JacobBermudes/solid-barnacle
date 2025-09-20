@@ -78,9 +78,7 @@ func (r *RedisAccount) AccountInit(queryChan chan DatabaseQuery) *RedisAccount {
 
 		wg.Wait()
 
-		fmt.Println("Waing setting account")
 		answer := <-query.ReplyChan
-		fmt.Println("Account setted")
 		if answer.Err != nil {
 			fmt.Println("Error saving account to Redis:", err)
 		}
@@ -237,6 +235,31 @@ func (r *RedisAccount) TopupAccount(sum int64, queryChan chan DatabaseQuery) (in
 	}
 
 	return curBalance, nil
+}
+
+func (r *RedisAccount) UpdateBalance(queryChan chan DatabaseQuery) int64 {
+	query := DatabaseQuery{
+		UserID:    r.Userid,
+		QueryType: "getBalance",
+		Query:     fmt.Sprintf("%d", r.Userid),
+		ReplyChan: make(chan DatabaseAnswer),
+	}
+
+	queryChan <- query
+	balance := <-query.ReplyChan
+
+	if balance.Err != nil {
+		return 0
+	}
+
+	curBalance, err := strconv.ParseInt(balance.Result, 10, 64)
+	if err != nil {
+		return 0
+	}
+
+	r.Balance = curBalance
+
+	return curBalance
 }
 
 func (r *RedisAccount) ToggleVpn() (bool, error) {

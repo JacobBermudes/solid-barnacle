@@ -33,6 +33,7 @@ type RedisReader interface {
 	AccountInit(queryChan chan account.DatabaseQuery) *account.RedisAccount
 	GetUsername() string
 	GetBalance() int64
+	UpdateBalance(queryChan chan account.DatabaseQuery) int64
 	GetTariff() string
 	GetAdblocker() bool
 	GetUserID() int64
@@ -200,7 +201,9 @@ func menuCallbackHandler(data string, acc RedisReader, queryChan chan account.Da
 	case "helpMenu":
 		return messenger.HelpMenuMsg(), false
 	case "paymentMenu":
-		return messenger.PaymentMenuMsg(acc.GetUsername(), acc.GetBalance()), false
+		return messenger.PaymentMenuMsg(acc.GetUsername(), acc.UpdateBalance(queryChan)), false
+	case "updateBalance":
+		return messenger.PaymentMenuMsg(acc.GetUsername(), acc.UpdateBalance(queryChan)), false
 	case "topup_fiat":
 
 		sum, err := acc.TopupAccount(100, queryChan)

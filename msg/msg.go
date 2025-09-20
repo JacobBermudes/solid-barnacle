@@ -43,7 +43,7 @@ func (m MessageCreator) HomeMsg(username string, balance int64, tariff string, a
 
 func (m MessageCreator) PaymentMenuMsg(username string, balance int64) tgbotapi.MessageConfig {
 
-	walletData := fmt.Sprintf("Уважаемый %s! Ваш баланс: %d рублей.\n\n", username, balance)
+	walletData := fmt.Sprintf("Уважаемый %s!\nВаш баланс: %d рублей.\n\n", username, balance)
 
 	msg := tgbotapi.NewMessage(0, "💲 *Внесение оплаты!*\n\n"+
 		walletData+
@@ -56,6 +56,9 @@ func (m MessageCreator) PaymentMenuMsg(username string, balance int64) tgbotapi.
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("Пополнить банковской картой", "topup_fiat"),
 			tgbotapi.NewInlineKeyboardButtonData("Пополнить криптовалютой", "topup_crypto"),
+		),
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("Проверить поступления", "updateBalance"),
 		),
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("Изменить тариф", "changeTariff"),
