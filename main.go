@@ -23,6 +23,7 @@ type mmcMsg interface {
 	PaymentMenuMsg(username string, balance int64) tgbotapi.MessageConfig
 	HelpMenuMsg() tgbotapi.MessageConfig
 	RefererMsg(userid string) tgbotapi.MessageConfig
+	DonateMsg() tgbotapi.MessageConfig
 }
 
 var messenger mmcMsg = msg.MessageCreator{
@@ -204,30 +205,28 @@ func menuCallbackHandler(data string, acc RedisReader, queryChan chan account.Da
 		return messenger.PaymentMenuMsg(acc.GetUsername(), acc.UpdateBalance(queryChan)), false
 	case "updateBalance":
 		return messenger.PaymentMenuMsg(acc.GetUsername(), acc.UpdateBalance(queryChan)), false
-	case "topup_fiat":
-
-		sum, err := acc.TopupAccount(100, queryChan)
-		if err != nil {
-			return tgbotapi.NewMessage(0, "Ошибка пополнения баланса!"), true
-		}
-
-		return tgbotapi.NewMessage(0, fmt.Sprintf("Баланс успешно пополнен на %d рублей.", sum)), true
-	case "topup_crypto":
-
-		sum, err := acc.TopupAccount(100, queryChan)
-		if err != nil {
-			return tgbotapi.NewMessage(0, "Ошибка пополнения баланса!"), true
-		}
-
-		return tgbotapi.NewMessage(0, fmt.Sprintf("Баланс успешно пополнен на %d рублей.", sum)), true
 	case "referral":
 		return messenger.RefererMsg(fmt.Sprintf("%d", acc.GetUserID())), false
 	case "donate":
-		msg := tgbotapi.NewMessage(0, "Если вам нравится наш VPN-сервис и вы хотите поддержать его развитие финансово, поддержка принимается по СБП на ТБанк :) ")
-		msg.ParseMode = "Markdown"
-		return msg, true
+		return messenger.DonateMsg(), true
 	case "help":
 		return messenger.HelpMenuMsg(), false
+	case "topup_fiat":
+		topupSum := int64(100)
+		sum, err := acc.TopupAccount(topupSum, queryChan)
+		if err != nil {
+			return tgbotapi.NewMessage(0, "Ошибка пополнения баланса!"), true
+		}
+
+		return tgbotapi.NewMessage(0, fmt.Sprintf("Баланс успешно пополнен на %d рублей. Итого: %d", topupSum, sum)), true
+	case "topup_crypto":
+		topupSum := int64(100)
+		sum, err := acc.TopupAccount(topupSum, queryChan)
+		if err != nil {
+			return tgbotapi.NewMessage(0, "Ошибка пополнения баланса!"), true
+		}
+
+		return tgbotapi.NewMessage(0, fmt.Sprintf("Баланс успешно пополнен на %d рублей. Итого: %d", topupSum, sum)), true
 	}
 
 	return tgbotapi.NewMessage(0, "Ошибка разбора команды. Пожалуйста обратитесь в поддержку."), true

@@ -3,12 +3,13 @@ package account
 import (
 	"encoding/json"
 	"fmt"
+	"mmcvpn/dbaccount"
 	"strconv"
 	"strings"
 	"sync"
 )
 
-type RedisAccount struct {
+type InternalAccount struct {
 	Userid     int64    `json:"userid"`
 	Username   string   `json:"username"`
 	Balance    int64    `json:"balance"`
@@ -18,11 +19,8 @@ type RedisAccount struct {
 	Active     bool     `json:"active"`
 }
 
-type DBAccount struct {
-	UserID   int64  `json:"userid"`
-	Username string `json:"username"`
-	Tariff   string `json:"tariff"`
-	Active   bool   `json:"active"`
+type RedisAccount interface {
+	GetAccountByID(userid string) dbaccount.DBAccount
 }
 
 type DatabaseQuery struct {
@@ -37,27 +35,21 @@ type DatabaseAnswer struct {
 	Err    error
 }
 
-func (r *RedisAccount) AccountInit(queryChan chan DatabaseQuery) *RedisAccount {
+func (r *InternalAccount) AccountInit(queryChan chan DatabaseQuery) *InternalAccount {
 
-	query := DatabaseQuery{
-		UserID:    r.Userid,
-		QueryType: "getAccDB",
-		Query:     fmt.Sprintf("%d", r.Userid),
-		ReplyChan: make(chan DatabaseAnswer),
-	}
-	queryChan <- query
+	DatabaseAccount := dbaccount.DBAccount{}
+	DatabaseAccount = DatabaseAccount.GetAccountByID(fmt.Sprintf("%d", r.Userid))
 
-	answer := <-query.ReplyChan
+	if DatabaseAccount.UserID == 0 { //Create new acc
 
-	if answer.Err != nil && len(answer.Result) == 0 {
-		fmt.Println("New user!")
-		newAcc := DBAccount{
-			UserID:   r.Userid,
-			Username: r.Username,
-			Tariff:   "Бесплатный",
-			Active:   false,
-		}
-		accountData, err := json.Marshal(newAcc)
+		fmt.Println("New user has came up")
+
+		DatabaseAccount.UserID = r.Userid
+		DatabaseAccount.Username = r.Username
+		DatabaseAccount.Tariff = "Стандартный"
+		DatabaseAccount.Active = false
+
+		accountData, err := json.Marshal(DatabaseAccount)
 		if err != nil {
 			fmt.Println("Error marshaling account:", err)
 			return r
@@ -157,27 +149,27 @@ func (r *RedisAccount) AccountInit(queryChan chan DatabaseQuery) *RedisAccount {
 	}
 }
 
-func (r *RedisAccount) GetUserID() int64 {
+func (r *InternalAccount) GetUserID() int64 {
 	return r.Userid
 }
 
-func (r *RedisAccount) GetUsername() string {
+func (r *InternalAccount) GetUsername() string {
 	return r.Username
 }
 
-func (r *RedisAccount) GetBalance() int64 {
+func (r *InternalAccount) GetBalance() int64 {
 	return r.Balance
 }
 
-func (r *RedisAccount) GetTariff() string {
+func (r *InternalAccount) GetTariff() string {
 	return r.Tariff
 }
 
-func (r *RedisAccount) GetAdblocker() bool {
+func (r *InternalAccount) GetAdblocker() bool {
 	return r.Adblocker
 }
 
-func (r *RedisAccount) GetSharedKey(queryChan chan DatabaseQuery) []string {
+func (r *InternalAccount) GetSharedKey(queryChan chan DatabaseQuery) []string {
 
 	if !r.Active {
 		r.Active = true
@@ -203,7 +195,7 @@ func (r *RedisAccount) GetSharedKey(queryChan chan DatabaseQuery) []string {
 	return r.SharedKeys
 }
 
-func (r *RedisAccount) GetActive() string {
+func (r *InternalAccount) GetActive() string {
 	desc := "ошибка"
 	if r.Active {
 		desc = "Активен"
@@ -213,7 +205,7 @@ func (r *RedisAccount) GetActive() string {
 	return desc
 }
 
-func (r *RedisAccount) TopupAccount(sum int64, queryChan chan DatabaseQuery) (int64, error) {
+func (r *InternalAccount) TopupAccount(sum int64, queryChan chan DatabaseQuery) (int64, error) {
 	r.Balance += sum
 	query := DatabaseQuery{
 		UserID:    r.Userid,
@@ -237,7 +229,7 @@ func (r *RedisAccount) TopupAccount(sum int64, queryChan chan DatabaseQuery) (in
 	return curBalance, nil
 }
 
-func (r *RedisAccount) UpdateBalance(queryChan chan DatabaseQuery) int64 {
+func (r *InternalAccount) UpdateBalance(queryChan chan DatabaseQuery) int64 {
 	query := DatabaseQuery{
 		UserID:    r.Userid,
 		QueryType: "getBalance",
@@ -262,12 +254,12 @@ func (r *RedisAccount) UpdateBalance(queryChan chan DatabaseQuery) int64 {
 	return curBalance
 }
 
-func (r *RedisAccount) ToggleVpn() (bool, error) {
+func (r *InternalAccount) ToggleVpn() (bool, error) {
 	r.Active = !r.Active
 	return r.Active, nil
 }
 
-func (r *RedisAccount) AddKey(queryChan chan DatabaseQuery) string {
+func (r *InternalAccount) AddKey(queryChan chan DatabaseQuery) string {
 
 	query := DatabaseQuery{
 		UserID:    r.Userid,
