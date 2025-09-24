@@ -1,12 +1,11 @@
 package account
 
 import (
-	"encoding/json"
 	"fmt"
 	"mmcvpn/dbaccount"
+	"mmcvpn/keys"
 	"strconv"
 	"strings"
-	"sync"
 )
 
 type InternalAccount struct {
@@ -19,29 +18,12 @@ type InternalAccount struct {
 	Active     bool     `json:"active"`
 }
 
-type RedisAccount interface {
-	GetAccountByID(userid string) dbaccount.DBAccount
-}
-
-type DatabaseQuery struct {
-	UserID    int64
-	QueryType string
-	Query     string
-	ReplyChan chan DatabaseAnswer
-}
-
-type DatabaseAnswer struct {
-	Result string
-	Err    error
-}
-
-func (r *InternalAccount) AccountInit(queryChan chan DatabaseQuery) *InternalAccount {
+func (r *InternalAccount) AccountInit() *InternalAccount {
 
 	DatabaseAccount := dbaccount.DBAccount{}
 	DatabaseAccount = DatabaseAccount.GetAccountByID(fmt.Sprintf("%d", r.Userid))
 
 	if DatabaseAccount.UserID == 0 { //Create new acc
-
 		fmt.Println("New user has came up")
 
 		DatabaseAccount.UserID = r.Userid
@@ -49,104 +31,26 @@ func (r *InternalAccount) AccountInit(queryChan chan DatabaseQuery) *InternalAcc
 		DatabaseAccount.Tariff = "Стандартный"
 		DatabaseAccount.Active = false
 
-		accountData, err := json.Marshal(DatabaseAccount)
-		if err != nil {
-			fmt.Println("Error marshaling account:", err)
-			return r
-		}
+		DatabaseAccount.SetAccountByID(fmt.Sprintf("%d", r.Userid))
 
-		var wg sync.WaitGroup
-		wg.Add(1)
-		query := DatabaseQuery{
-			UserID:    r.Userid,
-			QueryType: "setAccDB",
-			Query:     string(accountData),
-			ReplyChan: make(chan DatabaseAnswer),
-		}
-		go func(dbquery DatabaseQuery) {
-			queryChan <- query
-			wg.Done()
-		}(query)
-
-		wg.Wait()
-
-		answer := <-query.ReplyChan
-		if answer.Err != nil {
-			fmt.Println("Error saving account to Redis:", err)
-		}
-
-		queryBalance := DatabaseQuery{
-			UserID:    r.Userid,
-			QueryType: "getBalance",
-			Query:     fmt.Sprintf("%d", r.Userid),
-			ReplyChan: make(chan DatabaseAnswer),
-		}
-		queryChan <- queryBalance
-		answerBalance := <-queryBalance.ReplyChan
-
-		if answerBalance.Result == "" {
-			answerBalance.Result = "0"
-		}
-
-		balance, err := strconv.ParseInt(answerBalance.Result, 10, 64)
-		if err != nil {
-			fmt.Println("Ошибка преобразования баланса:", err)
-			r.Balance = 0
-		} else {
-			r.Balance = balance
-		}
-
-		r.Tariff = newAcc.Tariff
-		r.Adblocker = false
 		r.SharedKeys = []string{}
-		r.Active = newAcc.Active
-
-		return r
-	} else {
-		currDbAcc := DBAccount{}
-		err := json.Unmarshal([]byte(answer.Result), &currDbAcc)
-		if err != nil {
-			fmt.Println("Ошибка парсинга данных из бд")
-		}
-
-		r.Tariff = currDbAcc.Tariff
-		r.Active = currDbAcc.Active
-
-		query := DatabaseQuery{
-			UserID:    r.Userid,
-			QueryType: "getBalance",
-			Query:     fmt.Sprintf("%d", r.Userid),
-			ReplyChan: make(chan DatabaseAnswer),
-		}
-		queryChan <- query
-		answer := <-query.ReplyChan
-
-		if answer.Result == "" {
-			answer.Result = "0"
-		}
-
-		balance, err := strconv.ParseInt(answer.Result, 10, 64)
-		if err != nil {
-			fmt.Println("Ошибка преобразования баланса:", err)
-			r.Balance = 0
-		} else {
-			r.Balance = balance
-		}
-
-		queryKeyList := DatabaseQuery{
-			UserID:    r.Userid,
-			QueryType: "getKeysList",
-			Query:     fmt.Sprintf("%d", r.Userid),
-			ReplyChan: make(chan DatabaseAnswer),
-		}
-		queryChan <- queryKeyList
-		answergetKeyList := <-queryKeyList.ReplyChan
-
-		r.SharedKeys = strings.Split(answergetKeyList.Result, ",")
+		r.Tariff = DatabaseAccount.Tariff
+		r.Active = DatabaseAccount.Active
 		r.Adblocker = false
-		r.Active = len(strings.Split(answergetKeyList.Result, ",")) >= 0
-		return r
+	} else {
+		keysGetter := keys.KeyStorage{
+			UserID: DatabaseAccount.UserID,
+		}
+
+		r.SharedKeys = keysGetter.GetKeysList(r.Userid)
+		r.Tariff = DatabaseAccount.Tariff
+		r.Active = DatabaseAccount.Active
+		r.Adblocker = false
 	}
+
+	r.Balance = DatabaseAccount.GetBalance()
+
+	return r
 }
 
 func (r *InternalAccount) GetUserID() int64 {

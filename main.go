@@ -31,7 +31,7 @@ var messenger mmcMsg = msg.MessageCreator{
 }
 
 type RedisReader interface {
-	AccountInit(queryChan chan account.DatabaseQuery) *account.RedisAccount
+	AccountInit() *account.InternalAccount
 	GetUsername() string
 	GetBalance() int64
 	UpdateBalance(queryChan chan account.DatabaseQuery) int64
@@ -78,7 +78,7 @@ func main() {
 
 		go func(update tgbotapi.Update) {
 
-			var accountReader RedisReader = &account.RedisAccount{
+			var accountReader RedisReader = &account.InternalAccount{
 				Userid:   update.SentFrom().ID,
 				Username: update.SentFrom().UserName,
 			}
@@ -87,16 +87,11 @@ func main() {
 
 				callback := update.CallbackQuery
 
-				accountReader.AccountInit(queryChan)
-
-				log.Printf("Received callback: %s. From user %s", callback.Data, callback.From.UserName)
+				accountReader.AccountInit()
 
 				msg, showHome := menuCallbackHandler(callback.Data, accountReader, queryChan)
-
 				msg.ChatID = callback.Message.Chat.ID
-
 				releaseButton := tgbotapi.NewCallback(callback.ID, "")
-
 				bot.Send(msg)
 
 				if showHome {
@@ -239,7 +234,7 @@ func commandHandler(command string, acc RedisReader, queryChan chan account.Data
 		key_sender = acc.GetUserID()
 		return tgbotapi.NewMessage(0, "Ожидаем ключа включая VPN://")
 	case "start":
-		acc.AccountInit(queryChan)
+		acc.AccountInit()
 		return messenger.HomeMsg(acc.GetUsername(), acc.GetBalance(), acc.GetTariff(), acc.GetAdblocker(), acc.GetActive())
 	case "connect":
 		return messenger.VpnConnectMsg(acc.GetSharedKey(queryChan))

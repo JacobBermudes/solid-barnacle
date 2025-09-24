@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -13,7 +14,7 @@ import (
 var rdbpass = os.Getenv("REDIS_PASS")
 var ctx = context.Background()
 
-var db = redis.NewClient(&redis.Options{
+var acc_db = redis.NewClient(&redis.Options{
 	Addr:     "localhost:6379",
 	DB:       0,
 	Password: rdbpass,
@@ -32,7 +33,7 @@ func (d DBAccount) GetAccountByID(userid string) DBAccount {
 	defer cancel()
 
 	if fmt.Sprintf("%d", d.UserID) != userid {
-		accountDataQuery := db.Get(timeout, userid)
+		accountDataQuery := acc_db.Get(timeout, userid)
 
 		if accountDataQuery != nil {
 			accountData, _ := accountDataQuery.Result()
@@ -41,4 +42,29 @@ func (d DBAccount) GetAccountByID(userid string) DBAccount {
 	}
 
 	return d
+}
+
+func (d DBAccount) SetAccountByID(userid string) DBAccount {
+
+	timeout, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
+	accountData, _ := json.Marshal(d)
+
+	acc_db.Set(timeout, userid, string(accountData), 0)
+
+	return d
+}
+
+func (d DBAccount) GetBalance() int64 {
+
+	var balanceNumeric int64 = 0
+	balanceQuery := acc_db.Get(ctx, fmt.Sprintf("%d", d.UserID))
+
+	if balanceQuery != nil {
+		balance, _ := balanceQuery.Result()
+		balanceNumeric, _ = strconv.ParseInt(balance, 10, 64)
+	}
+
+	return balanceNumeric
 }
