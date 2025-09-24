@@ -82,8 +82,9 @@ func (d DBAccount) DecrBalance(sum int64) int64 {
 	currentBalance := d.GetBalance()
 
 	if currentBalance < sum {
-		return currentBalance
+		return 0
 	}
 
-	return acc_db.DecrBy(ctx, fmt.Sprintf("%d", d.UserID), sum).Val()
+	balanceNumeric := acc_db.DecrBy(ctx, fmt.Sprintf("%d", d.UserID), sum).Val()
+	return balanceNumeric
 }
