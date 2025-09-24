@@ -320,28 +320,7 @@ func DBWorker(queryChan <-chan account.DatabaseQuery, ctx context.Context) {
 				Result: freeKeys[0],
 				Err:    err,
 			}
-		case "getKeysList":
-			bindedKeys, err := keysDb.SMembers(ctx, query.Query).Result()
-
-			if err != nil {
-				fmt.Println("Ошибка чтения ключей юзегра их бахы!")
-				query.ReplyChan <- account.DatabaseAnswer{
-					Result: "",
-					Err:    err,
-				}
-			}
-
-			query.ReplyChan <- account.DatabaseAnswer{
-				Result: strings.Join(bindedKeys, ","),
-				Err:    nil,
-			}
-		case "getBalance":
-			balance, err := balanceDb.Get(ctx, query.Query).Result()
-			query.ReplyChan <- account.DatabaseAnswer{
-				Result: balance,
-				Err:    err,
-			}
-		case "topupBalance":
+		"topupBalance":
 			refferalBonus, _ := strconv.ParseInt(query.Query, 10, 64)
 			newValue, err := balanceDb.IncrBy(ctx, fmt.Sprintf("%d", query.UserID), refferalBonus).Result()
 

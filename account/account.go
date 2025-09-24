@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"mmcvpn/dbaccount"
 	"mmcvpn/keys"
-	"strconv"
 	"strings"
 )
 
@@ -107,60 +106,6 @@ func (r *InternalAccount) GetActive() string {
 		desc = "Отключен"
 	}
 	return desc
-}
-
-func (r *InternalAccount) TopupAccount(sum int64, queryChan chan DatabaseQuery) (int64, error) {
-	r.Balance += sum
-	query := DatabaseQuery{
-		UserID:    r.Userid,
-		QueryType: "topupBalance",
-		Query:     fmt.Sprintf("%d", sum),
-		ReplyChan: make(chan DatabaseAnswer),
-	}
-
-	queryChan <- query
-	answer := <-query.ReplyChan
-
-	if answer.Err != nil {
-		return 0, answer.Err
-	}
-
-	curBalance, err := strconv.ParseInt(answer.Result, 10, 64)
-	if err != nil {
-		return 0, err
-	}
-
-	return curBalance, nil
-}
-
-func (r *InternalAccount) UpdateBalance(queryChan chan DatabaseQuery) int64 {
-	query := DatabaseQuery{
-		UserID:    r.Userid,
-		QueryType: "getBalance",
-		Query:     fmt.Sprintf("%d", r.Userid),
-		ReplyChan: make(chan DatabaseAnswer),
-	}
-
-	queryChan <- query
-	balance := <-query.ReplyChan
-
-	if balance.Err != nil {
-		return 0
-	}
-
-	curBalance, err := strconv.ParseInt(balance.Result, 10, 64)
-	if err != nil {
-		return 0
-	}
-
-	r.Balance = curBalance
-
-	return curBalance
-}
-
-func (r *InternalAccount) ToggleVpn() (bool, error) {
-	r.Active = !r.Active
-	return r.Active, nil
 }
 
 func (r *InternalAccount) AddKey(queryChan chan DatabaseQuery) string {

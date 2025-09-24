@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -17,6 +16,12 @@ var ctx = context.Background()
 var acc_db = redis.NewClient(&redis.Options{
 	Addr:     "localhost:6379",
 	DB:       0,
+	Password: rdbpass,
+})
+
+var balance_db = redis.NewClient(&redis.Options{
+	Addr:     "localhost:6379",
+	DB:       2,
 	Password: rdbpass,
 })
 
@@ -59,12 +64,26 @@ func (d DBAccount) SetAccountByID(userid string) DBAccount {
 func (d DBAccount) GetBalance() int64 {
 
 	var balanceNumeric int64 = 0
-	balanceQuery := acc_db.Get(ctx, fmt.Sprintf("%d", d.UserID))
+	balanceQuery, err := balance_db.Get(ctx, fmt.Sprintf("%d", d.UserID)).Int64()
 
-	if balanceQuery != nil {
-		balance, _ := balanceQuery.Result()
-		balanceNumeric, _ = strconv.ParseInt(balance, 10, 64)
+	if err != redis.Nil {
+		balanceNumeric = balanceQuery
 	}
 
 	return balanceNumeric
+}
+
+func (d DBAccount) IncrBalance(sum int64) int64 {
+	return balance_db.IncrBy(ctx, fmt.Sprintf("%d", d.UserID), sum).Val()
+}
+
+func (d DBAccount) DecrBalance(sum int64) int64 {
+
+	currentBalance := d.GetBalance()
+
+	if currentBalance < sum {
+		return currentBalance
+	}
+
+	return acc_db.DecrBy(ctx, fmt.Sprintf("%d", d.UserID), sum).Val()
 }
