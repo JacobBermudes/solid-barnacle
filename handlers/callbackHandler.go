@@ -2,64 +2,76 @@ package handlers
 
 import (
 	"fmt"
+	"mmcvpn/account"
+	"mmcvpn/keys"
+	"mmcvpn/msg"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 type CallbackHandler struct {
-	Data       string
-	ChatID     int64
-	CallbackID string
-	ShowHome   bool
+	Data            string
+	ChatID          int64
+	CallbackID      string
+	ShowHome        bool
+	InternalAccount account.InternalAccount
 }
 
 func (c CallbackHandler) Handle() tgbotapi.MessageConfig {
 
-	switch c.Data {
-	case "bindKey":
-		msg := tgbotapi.NewMessage(0, "")
-		answer := acc.AddKey(queryChan)
-		if answer == "Ключей как будто бы и нет..." || answer == "Максимильное количество ключей" {
-			msg.Text = answer
-		} else {
-			msg.Text = fmt.Sprintf("Ключ ```%s``` >успешно привязан к аккаунту!", answer)
-			msg.ParseMode = "Markdown"
-
-		}
-		return msg, true
-	case "homePage":
-		return messenger.HomeMsg(acc.GetUsername(), acc.GetBalance(), acc.GetTariff(), acc.GetAdblocker(), acc.GetActive()), false
-	case "vpnConnect":
-		return messenger.VpnConnectMsg(acc.GetSharedKey(queryChan)), false
-	case "helpMenu":
-		return messenger.HelpMenuMsg(), false
-	case "paymentMenu":
-		return messenger.PaymentMenuMsg(acc.GetUsername(), acc.UpdateBalance(queryChan)), false
-	case "updateBalance":
-		return messenger.PaymentMenuMsg(acc.GetUsername(), acc.UpdateBalance(queryChan)), false
-	case "referral":
-		return messenger.RefererMsg(fmt.Sprintf("%d", acc.GetUserID())), false
-	case "donate":
-		return messenger.DonateMsg(), true
-	case "help":
-		return messenger.HelpMenuMsg(), false
-	case "topup_fiat":
-		topupSum := int64(100)
-		sum, err := acc.TopupAccount(topupSum, queryChan)
-		if err != nil {
-			return tgbotapi.NewMessage(0, "Ошибка пополнения баланса!"), true
-		}
-
-		return tgbotapi.NewMessage(0, fmt.Sprintf("Баланс успешно пополнен на %d рублей. Итого: %d", topupSum, sum)), true
-	case "topup_crypto":
-		topupSum := int64(100)
-		sum, err := acc.TopupAccount(topupSum, queryChan)
-		if err != nil {
-			return tgbotapi.NewMessage(0, "Ошибка пополнения баланса!"), true
-		}
-
-		return tgbotapi.NewMessage(0, fmt.Sprintf("Баланс успешно пополнен на %d рублей. Итого: %d", topupSum, sum)), true
+	messenger := msg.MessageCreator{
+		BotAddress: "https://t.me/mmcvpnbot",
+		ChatID:     c.ChatID,
 	}
 
-	return tgbotapi.NewMessage(0, "Ошибка разбора команды. Пожалуйста обратитесь в поддержку."), true
+	switch c.Data {
+	case "bindKey":
+		msg := tgbotapi.NewMessage(c.ChatID, keys.KeyStorage{
+			UserID: c.InternalAccount.Userid,
+		}.BindRandomKey())
+		msg.ParseMode = "Markdown"
+		return msg
+	case "homePage":
+		return messenger.HomeMsg(c.InternalAccount.GetUsername(), c.InternalAccount.GetBalance(), c.InternalAccount.GetTariff(), c.InternalAccount.GetAdblocker(), c.InternalAccount.GetActive())
+	case "vpnConnect":
+		return messenger.VpnConnectMsg(c.InternalAccount.GetSharedKey())
+	case "helpMenu":
+		return messenger.HelpMenuMsg()
+	case "paymentMenu":
+		return messenger.PaymentMenuMsg(c.InternalAccount.GetUsername(), c.InternalAccount.GetBalance())
+	case "updateBalance":
+		return messenger.PaymentMenuMsg(c.InternalAccount.GetUsername(), c.InternalAccount.GetBalance())
+	case "referral":
+		return messenger.RefererMsg(fmt.Sprintf("%d", c.InternalAccount.GetUserID()))
+	case "donate":
+		return messenger.DonateMsg()
+	case "help":
+		return messenger.HelpMenuMsg()
+	case "topup_fiat":
+		topupSum := int64(100)
+		sum := c.InternalAccount.TopupAccount(topupSum)
+
+		return tgbotapi.NewMessage(c.ChatID, fmt.Sprintf("Баланс успешно пополнен на %d рублей. Итого: %d", topupSum, sum))
+	case "topup_crypto":
+		topupSum := int64(100)
+		sum := c.InternalAccount.TopupAccount(topupSum)
+
+		return tgbotapi.NewMessage(c.ChatID, fmt.Sprintf("Баланс успешно пополнен на %d рублей. Итого: %d", topupSum, sum))
+	}
+
+	return tgbotapi.NewMessage(0, "Ошибка разбора команды. Пожалуйста обратитесь в поддержку.")
+}
+
+func (c CallbackHandler) ShowHomePage() bool {
+
+	ActionsDontShowHome := []string{"homePage", "vpnConnect", "helpMenu", "paymentMenu", "updateBalance"}
+
+	actionsSet := make(map[string]bool, len(ActionsDontShowHome))
+	for _, action := range ActionsDontShowHome {
+		actionsSet[action] = true
+	}
+
+	_, exists := actionsSet[c.Data]
+
+	return !exists
 }

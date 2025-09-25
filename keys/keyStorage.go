@@ -33,3 +33,21 @@ func (k KeyStorage) AddKeyToStorage() string {
 	}
 	return fmt.Sprintf("Добавлено %d ключей", len(k.Keys))
 }
+
+func (k KeyStorage) BindRandomKey() string {
+	key, err := db.SPop(ctx, "ready_keys").Result()
+	if err == redis.Nil {
+		return "Ключей как будто бы и нет..."
+	} else if err != nil {
+		return "Ошибка при получении ключа"
+	}
+
+	currentKeys := db.SMembers(ctx, fmt.Sprintf("%d", k.UserID)).Val()
+	if len(currentKeys) >= 2 {
+		db.SAdd(ctx, "ready_keys", key)
+		return "Максимильное количество ключей"
+	}
+
+	db.SAdd(ctx, fmt.Sprintf("%d", k.UserID), key)
+	return fmt.Sprintf("Ключ ```%s``` успешно привязан к вашему аккаунту!", key)
+}

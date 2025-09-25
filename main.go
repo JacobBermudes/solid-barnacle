@@ -77,20 +77,24 @@ func main() {
 
 			if update.CallbackQuery != nil {
 
+				accountReader.AccountInit()
+
 				callbackHandler := handlers.CallbackHandler{
 					Data:       update.CallbackQuery.Data,
 					ChatID:     update.CallbackQuery.Message.Chat.ID,
 					CallbackID: update.CallbackQuery.ID,
 					ShowHome:   false,
+					InternalAccount: account.InternalAccount{
+						Userid:   update.SentFrom().ID,
+						Username: update.SentFrom().UserName,
+					},
 				}
-
-				accountReader.AccountInit()
 
 				responseMsg := callbackHandler.Handle()
 				bot.Send(responseMsg)
 
 				releaseButton := tgbotapi.NewCallback(callbackHandler.CallbackID, "")
-				if callbackHandler.ShowHome {
+				if callbackHandler.ShowHomePage() {
 					homeMsg := messenger.HomeMsg(accountReader.GetUsername(), accountReader.GetBalance(), accountReader.GetTariff(), accountReader.GetAdblocker(), accountReader.GetActive())
 					homeMsg.ChatID = callbackHandler.ChatID
 					bot.Send(homeMsg)
@@ -138,83 +142,21 @@ func main() {
 
 					}
 
-					msg := commandHandler(update.Message.Command(), accountReader, queryChan)
-					msg.ChatID = update.FromChat().ID
-
-					if _, err := bot.Send(msg); err != nil {
-						log.Printf("Ошибка отправки сообщения в чат: %v", err)
+					commandHandler := handlers.CommandHandler{
+						ChatID:  update.Message.Chat.ID,
+						Command: update.Message.Command(),
+						InternalAccount: account.InternalAccount{
+							Userid:   update.SentFrom().ID,
+							Username: update.SentFrom().UserName,
+						},
 					}
+
+					commandHandledMsg := commandHandler.Handle()
+					bot.Send(commandHandledMsg)
 				}
 
 			}
 		}(update)
 
 	}
-}
-
-func menuCallbackHandler(data string, acc RedisReader) (tgbotapi.MessageConfig, bool) {
-
-	switch data {
-	case "addkey":
-		msg := tgbotapi.NewMessage(0, "")
-		answer := acc.AddKey(queryChan)
-		if answer == "Ключей как будто бы и нет..." || answer == "Максимильное количество ключей" {
-			msg.Text = answer
-		} else {
-			msg.Text = fmt.Sprintf("Ключ ```%s``` >успешно привязан к аккаунту!", answer)
-			msg.ParseMode = "Markdown"
-
-		}
-		return msg, true
-	case "homePage":
-		return messenger.HomeMsg(acc.GetUsername(), acc.GetBalance(), acc.GetTariff(), acc.GetAdblocker(), acc.GetActive()), false
-	case "vpnConnect":
-		return messenger.VpnConnectMsg(acc.GetSharedKey(queryChan)), false
-	case "helpMenu":
-		return messenger.HelpMenuMsg(), false
-	case "paymentMenu":
-		return messenger.PaymentMenuMsg(acc.GetUsername(), acc.UpdateBalance(queryChan)), false
-	case "updateBalance":
-		return messenger.PaymentMenuMsg(acc.GetUsername(), acc.UpdateBalance(queryChan)), false
-	case "referral":
-		return messenger.RefererMsg(fmt.Sprintf("%d", acc.GetUserID())), false
-	case "donate":
-		return messenger.DonateMsg(), true
-	case "help":
-		return messenger.HelpMenuMsg(), false
-	case "topup_fiat":
-		topupSum := int64(100)
-		sum, err := acc.TopupAccount(topupSum, queryChan)
-		if err != nil {
-			return tgbotapi.NewMessage(0, "Ошибка пополнения баланса!"), true
-		}
-
-		return tgbotapi.NewMessage(0, fmt.Sprintf("Баланс успешно пополнен на %d рублей. Итого: %d", topupSum, sum)), true
-	case "topup_crypto":
-		topupSum := int64(100)
-		sum, err := acc.TopupAccount(topupSum, queryChan)
-		if err != nil {
-			return tgbotapi.NewMessage(0, "Ошибка пополнения баланса!"), true
-		}
-
-		return tgbotapi.NewMessage(0, fmt.Sprintf("Баланс успешно пополнен на %d рублей. Итого: %d", topupSum, sum)), true
-	}
-
-	return tgbotapi.NewMessage(0, "Ошибка разбора команды. Пожалуйста обратитесь в поддержку."), true
-}
-
-func commandHandler(command string, acc RedisReader, queryChan chan account.DatabaseQuery) tgbotapi.MessageConfig {
-	fmt.Printf("Received command: %s. From user %s", command, acc.GetUsername())
-	switch command {
-	case "addkey":
-		key_sender = acc.GetUserID()
-		return tgbotapi.NewMessage(0, "Ожидаем ключа включая VPN://")
-	case "start":
-		acc.AccountInit()
-		return messenger.HomeMsg(acc.GetUsername(), acc.GetBalance(), acc.GetTariff(), acc.GetAdblocker(), acc.GetActive())
-	case "connect":
-		return messenger.VpnConnectMsg(acc.GetSharedKey(queryChan))
-	}
-
-	return tgbotapi.NewMessage(0, "Ошибка разбора команды.Обратитесь в поддержку")
 }

@@ -85,6 +85,11 @@ func (r *InternalAccount) GetUsername() string {
 }
 
 func (r *InternalAccount) GetBalance() int64 {
+	DatabaseAccount := dbaccount.DBAccount{
+		UserID: r.Userid,
+	}
+	r.Balance = DatabaseAccount.GetBalance()
+
 	return r.Balance
 }
 
@@ -125,5 +130,13 @@ func (r *InternalAccount) RefferalBonus(userid int64, sum int64) int64 {
 	}
 	result := DatabaseAccount.IncrBalance(sum)
 
+	return result
+}
+
+func (r *InternalAccount) TopupAccount(sum int64) int64 {
+	DatabaseAccount := dbaccount.DBAccount{
+		UserID: r.Userid,
+	}
+	result := DatabaseAccount.IncrBalance(sum)
 	return result
 }
