@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/go-redis/redis/v8"
 )
@@ -30,20 +29,16 @@ type DBAccount struct {
 	Username string `json:"username"`
 	Tariff   string `json:"tariff"`
 	Active   bool   `json:"active"`
+	Created  string `json:"created"`
 }
 
-func (d DBAccount) GetAccountByID(userid string) DBAccount {
+func (d DBAccount) GetAccount() DBAccount {
 
-	timeout, cancel := context.WithTimeout(ctx, 3*time.Second)
-	defer cancel()
+	accountDataQuery := acc_db.Get(ctx, fmt.Sprintf("%d", d.UserID))
 
-	if fmt.Sprintf("%d", d.UserID) != userid {
-		accountDataQuery := acc_db.Get(timeout, userid)
-
-		if accountDataQuery != nil {
-			accountData, _ := accountDataQuery.Result()
-			json.Unmarshal([]byte(accountData), &d)
-		}
+	if accountDataQuery != nil {
+		accountData, _ := accountDataQuery.Result()
+		json.Unmarshal([]byte(accountData), &d)
 	}
 
 	return d
@@ -51,12 +46,9 @@ func (d DBAccount) GetAccountByID(userid string) DBAccount {
 
 func (d DBAccount) SetAccountByID(userid string) DBAccount {
 
-	timeout, cancel := context.WithTimeout(ctx, 3*time.Second)
-	defer cancel()
-
 	accountData, _ := json.Marshal(d)
 
-	acc_db.Set(timeout, userid, string(accountData), 0)
+	acc_db.Set(ctx, userid, string(accountData), 0)
 
 	return d
 }

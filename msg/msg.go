@@ -92,7 +92,7 @@ func (m MessageCreator) VpnConnectMsg(currentKeys []string) tgbotapi.MessageConf
 	msg.Text = msg.Text + "\nДля получения информации по подключению выберите вашу операционную систему: \n\n"
 	msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("Добавить ключ", "addkey"),
+			tgbotapi.NewInlineKeyboardButtonData("Добавить ключ", "bindKey"),
 		),
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("Помощь с подключением", "helpMenu"),
@@ -143,4 +143,9 @@ func (m MessageCreator) RefererMsg(userid string) tgbotapi.MessageConfig {
 
 func (m MessageCreator) DonateMsg() tgbotapi.MessageConfig {
 	return tgbotapi.NewMessage(0, "Если вам нравится наш VPN-сервис и вы хотите поддержать его развитие финансово, поддержка принимается по СБП на ТБанк :) ")
+}
+
+func (m MessageCreator) ThanksMsg() tgbotapi.MessageConfig {
+	msg := tgbotapi.NewMessage(0, "Спасибо за регистрацию по реферальной ссылке!")
+	return msg
 }

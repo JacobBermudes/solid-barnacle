@@ -1,19 +1,17 @@
 package main
 
 import (
-	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"mmcvpn/account"
 	"mmcvpn/banking"
+	"mmcvpn/handlers"
+	"mmcvpn/keys"
 	"mmcvpn/msg"
 	"os"
 	"strconv"
 	"strings"
 
-	"github.com/go-redis/redis/v8"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
@@ -24,6 +22,7 @@ type mmcMsg interface {
 	HelpMenuMsg() tgbotapi.MessageConfig
 	RefererMsg(userid string) tgbotapi.MessageConfig
 	DonateMsg() tgbotapi.MessageConfig
+	ThanksMsg() tgbotapi.MessageConfig
 }
 
 var messenger mmcMsg = msg.MessageCreator{
@@ -33,23 +32,19 @@ var messenger mmcMsg = msg.MessageCreator{
 type RedisReader interface {
 	AccountInit() *account.InternalAccount
 	GetUsername() string
-	GetBalance() int64
-	UpdateBalance(queryChan chan account.DatabaseQuery) int64
 	GetTariff() string
 	GetAdblocker() bool
 	GetUserID() int64
 	GetActive() string
-	GetSharedKey(queryChan chan account.DatabaseQuery) []string
-	ToggleVpn() (bool, error)
-	TopupAccount(int64, chan account.DatabaseQuery) (int64, error)
-	AddKey(queryChan chan account.DatabaseQuery) string
+	GetSharedKey() []string
+	GetBalance() int64
+	AccountExist() bool
+	RefferalBonus(userid int64, sum int64) int64
 }
 
 var key_sender int64
 
 func main() {
-
-	ctx := context.Background()
 
 	botToken := os.Getenv("TELEGRAM_BOT_TOKEN")
 	if botToken == "" {
@@ -65,10 +60,7 @@ func main() {
 	u.Timeout = 60
 	updates := bot.GetUpdatesChan(u)
 
-	queryChan := make(chan account.DatabaseQuery, 100)
-	go DBWorker(queryChan, ctx)
-
-	go banking.Bank{}.StartMakePayments(queryChan, ctx)
+	go banking.Bank{}.StartMakePayments()
 
 	for update := range updates {
 
@@ -85,79 +77,63 @@ func main() {
 
 			if update.CallbackQuery != nil {
 
-				callback := update.CallbackQuery
+				callbackHandler := handlers.CallbackHandler{
+					Data:       update.CallbackQuery.Data,
+					ChatID:     update.CallbackQuery.Message.Chat.ID,
+					CallbackID: update.CallbackQuery.ID,
+					ShowHome:   false,
+				}
 
 				accountReader.AccountInit()
 
-				msg, showHome := menuCallbackHandler(callback.Data, accountReader, queryChan)
-				msg.ChatID = callback.Message.Chat.ID
-				releaseButton := tgbotapi.NewCallback(callback.ID, "")
-				bot.Send(msg)
+				responseMsg := callbackHandler.Handle()
+				bot.Send(responseMsg)
 
-				if showHome {
+				releaseButton := tgbotapi.NewCallback(callbackHandler.CallbackID, "")
+				if callbackHandler.ShowHome {
 					homeMsg := messenger.HomeMsg(accountReader.GetUsername(), accountReader.GetBalance(), accountReader.GetTariff(), accountReader.GetAdblocker(), accountReader.GetActive())
-					homeMsg.ChatID = callback.Message.Chat.ID
+					homeMsg.ChatID = callbackHandler.ChatID
 					bot.Send(homeMsg)
 					releaseButton.Text = "Вернулись в главное меню!"
 				}
-
 				bot.Request(releaseButton)
 			} else if update.Message != nil {
 
 				if key_sender == accountReader.GetUserID() {
 
-					query := account.DatabaseQuery{
-						UserID:    0,
-						QueryType: "addkey",
-						Query:     update.Message.Text,
-						ReplyChan: make(chan account.DatabaseAnswer),
-					}
-
-					queryChan <- query
-					answer := <-query.ReplyChan
-					fmt.Printf("%s", answer.Result)
 					key_sender = 0
 
-					msg := tgbotapi.NewMessage(update.FromChat().ID, "Ключ успешно добавлен")
-					msg.ChatID = update.FromChat().ID
+					result := keys.KeyStorage{
+						Keys: []string{
+							update.Message.Text,
+						},
+					}.AddKeyToStorage()
 
+					msg := tgbotapi.NewMessage(update.FromChat().ID, result)
+					msg.ChatID = update.FromChat().ID
 					bot.Send(msg)
 				}
 
 				if update.Message.IsCommand() {
 
 					refArgs := update.Message.CommandArguments()
-					fmt.Printf("\nRef args: %s", refArgs)
 					if strings.HasPrefix(refArgs, "ref") {
 						refID := strings.TrimPrefix(refArgs, "ref")
-						if refID != fmt.Sprintf("%d", accountReader.GetUserID()) {
-							msg := tgbotapi.NewMessage(update.FromChat().ID, "Спасибо за регистрацию по реферальной ссылке! Вам и вашему другу будет начислено по 10 рублей на баланс для тестирования сервиса.")
+						if refID != fmt.Sprintf("%d", accountReader.GetUserID()) && !accountReader.AccountExist() {
+							msg := messenger.ThanksMsg()
 							msg.ChatID = update.FromChat().ID
-
 							bot.Send(msg)
 
-							query := account.DatabaseQuery{
-								UserID:    0,
-								QueryType: "getAccDB",
-								Query:     fmt.Sprintf("%d", accountReader.GetUserID()),
-								ReplyChan: make(chan account.DatabaseAnswer),
+							friendID, _ := strconv.ParseInt(refID, 10, 64)
+							referralBonus := account.ReferralBonus{
+								CallerID: accountReader.GetUserID(),
+								FriendID: friendID,
+								Sum:      10,
 							}
+							msgBalance := tgbotapi.NewMessage(update.FromChat().ID, referralBonus.ApplyBonus())
+							msgBalance.ChatID = update.FromChat().ID
+							bot.Send(msgBalance)
 
-							queryChan <- query
-							answer := <-query.ReplyChan
-
-							if answer.Err != nil || answer.Result == "" {
-								_, err := accountReader.TopupAccount(10, queryChan)
-								if err != nil {
-									log.Printf("Ошибка пополнения баланса новому пользователю по реферальной ссылке: %v", err)
-								}
-
-								referal := account.RedisAccount{
-									Userid:   func() int64 { id, _ := strconv.ParseInt(refID, 10, 64); return id }(),
-									Username: "",
-								}
-								referal.TopupAccount(10, queryChan)
-							}
 						}
 
 					}
@@ -176,7 +152,7 @@ func main() {
 	}
 }
 
-func menuCallbackHandler(data string, acc RedisReader, queryChan chan account.DatabaseQuery) (tgbotapi.MessageConfig, bool) {
+func menuCallbackHandler(data string, acc RedisReader) (tgbotapi.MessageConfig, bool) {
 
 	switch data {
 	case "addkey":
@@ -241,118 +217,4 @@ func commandHandler(command string, acc RedisReader, queryChan chan account.Data
 	}
 
 	return tgbotapi.NewMessage(0, "Ошибка разбора команды.Обратитесь в поддержку")
-}
-
-func DBWorker(queryChan <-chan account.DatabaseQuery, ctx context.Context) {
-
-	var rdbpass = os.Getenv("REDIS_PASS")
-
-	var accountDb = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		DB:       0,
-		Password: rdbpass,
-	})
-
-	var keysDb = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		DB:       1,
-		Password: rdbpass,
-	})
-
-	var balanceDb = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		DB:       2,
-		Password: rdbpass,
-	})
-
-	for query := range queryChan {
-		fmt.Printf("\n\n%s", query.QueryType)
-		switch query.QueryType {
-		case "addkey":
-			keysDb.SAdd(ctx, "ready_keys", query.Query)
-			query.ReplyChan <- account.DatabaseAnswer{
-				Result: "Ключ успешно добавлен!",
-				Err:    nil,
-			}
-		case "getAccountsIDs":
-			ids, _ := accountDb.Keys(ctx, "*").Result()
-
-			stringedSlice, err := json.Marshal(ids)
-			if err != nil {
-				fmt.Println("Ошибка парсинга списка всех пользователей:", err)
-			}
-
-			query.ReplyChan <- account.DatabaseAnswer{
-				Result: string(stringedSlice),
-				Err:    err,
-			}
-		case "getAccDB":
-			result, err := accountDb.Get(ctx, query.Query).Result()
-			query.ReplyChan <- account.DatabaseAnswer{
-				Result: result,
-				Err:    err,
-			}
-		case "setAccDB":
-			accountDb.Set(ctx, fmt.Sprintf("%d", query.UserID), query.Query, 0)
-			query.ReplyChan <- account.DatabaseAnswer{
-				Result: "Запись успешно завершена!",
-				Err:    nil,
-			}
-		case "pickupKey":
-			freeKeys, err := keysDb.SMembers(ctx, "ready_keys").Result()
-			if err != nil || len(freeKeys) == 0 {
-				query.ReplyChan <- account.DatabaseAnswer{
-					Result: "Ключей как будто бы и нет...",
-					Err:    errors.New(""),
-				}
-				continue
-			}
-
-			ts := keysDb.TxPipeline()
-			ts.SRem(ctx, "ready_keys", freeKeys[0])
-			ts.SAdd(ctx, query.Query, freeKeys[0])
-			_, err = ts.Exec(ctx)
-			if err != nil {
-				fmt.Println("Ошибка присвоения ключа пользователю...")
-			}
-
-			query.ReplyChan <- account.DatabaseAnswer{
-				Result: freeKeys[0],
-				Err:    err,
-			}
-		"topupBalance":
-			refferalBonus, _ := strconv.ParseInt(query.Query, 10, 64)
-			newValue, err := balanceDb.IncrBy(ctx, fmt.Sprintf("%d", query.UserID), refferalBonus).Result()
-
-			if err != nil {
-				fmt.Println("Ошибка пополнения баланса юзера!")
-
-			}
-
-			query.ReplyChan <- account.DatabaseAnswer{
-				Result: fmt.Sprintf("%d", newValue),
-				Err:    err,
-			}
-		case "decrBalance":
-			decrValue, _ := strconv.ParseInt(query.Query, 10, 64)
-			newValue, err := balanceDb.DecrBy(ctx, fmt.Sprintf("%d", query.UserID), decrValue).Result()
-
-			if err != nil {
-				fmt.Println("Ошибка списания баланса юзера!")
-
-			}
-
-			query.ReplyChan <- account.DatabaseAnswer{
-				Result: fmt.Sprintf("%d", newValue),
-				Err:    err,
-			}
-		default:
-			fmt.Println("Неизвестный тип запроса к базе данных")
-			query.ReplyChan <- account.DatabaseAnswer{
-				Result: "",
-				Err:    errors.New("неизвестный тип запроса к базе данных"),
-			}
-		}
-	}
-
 }

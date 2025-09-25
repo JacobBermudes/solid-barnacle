@@ -22,15 +22,14 @@ type KeyStorage struct {
 	Keys   []string
 }
 
-func (k KeyStorage) GetKeysList(UserID int64) []string {
-
-	keys := []string{}
-
-	bindedKeys := db.SMembers(ctx, fmt.Sprintf("%d", UserID))
-
-	if bindedKeys != nil {
-		keys, _ = bindedKeys.Result()
-	}
-
+func (k KeyStorage) GetKeysList() []string {
+	keys, _ := db.SMembers(ctx, fmt.Sprintf("%d", k.UserID)).Result()
 	return keys
+}
+
+func (k KeyStorage) AddKeyToStorage() string {
+	for key := range k.Keys {
+		db.SAdd(ctx, "ready_keys", key)
+	}
+	return fmt.Sprintf("Добавлено %d ключей", len(k.Keys))
 }

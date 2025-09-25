@@ -1,7 +1,6 @@
 package banking
 
 import (
-	"context"
 	"encoding/json"
 	"log"
 	"mmcvpn/account"
@@ -10,7 +9,7 @@ import (
 
 type Bank struct{}
 
-func (b Bank) StartMakePayments(queryChan chan account.DatabaseQuery, ctx context.Context) {
+func (b Bank) StartMakePayments() {
 	ticker := time.NewTicker(24 * time.Hour)
 	defer ticker.Stop()
 

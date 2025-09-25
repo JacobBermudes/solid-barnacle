@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"mmcvpn/dbaccount"
 	"mmcvpn/keys"
-	"strings"
+	"time"
 )
 
 type InternalAccount struct {
@@ -17,18 +17,42 @@ type InternalAccount struct {
 	Active     bool     `json:"active"`
 }
 
+type ReferralBonus struct {
+	CallerID int64
+	FriendID int64
+	Sum      int64
+}
+
+func (r ReferralBonus) ApplyBonus() string {
+
+	DatabaseAccount := dbaccount.DBAccount{
+		UserID: r.CallerID,
+	}
+	DatabaseAccount.IncrBalance(r.Sum)
+
+	DatabaseAccount = dbaccount.DBAccount{
+		UserID: r.FriendID,
+	}
+	DatabaseAccount.IncrBalance(r.Sum)
+
+	return fmt.Sprintf("Начислено по %d рублей на баланс вам и вашему другу!", r.Sum)
+}
+
 func (r *InternalAccount) AccountInit() *InternalAccount {
 
-	DatabaseAccount := dbaccount.DBAccount{}
-	DatabaseAccount = DatabaseAccount.GetAccountByID(fmt.Sprintf("%d", r.Userid))
+	DatabaseAccount := dbaccount.DBAccount{
+		UserID: r.Userid,
+	}
+	DatabaseAccount = DatabaseAccount.GetAccount()
 
-	if DatabaseAccount.UserID == 0 { //Create new acc
+	if DatabaseAccount.Created == "" { //Create new acc
 		fmt.Println("New user has came up")
 
 		DatabaseAccount.UserID = r.Userid
 		DatabaseAccount.Username = r.Username
 		DatabaseAccount.Tariff = "Стандартный"
 		DatabaseAccount.Active = false
+		DatabaseAccount.Created = time.Now().Format("2006-01-02")
 
 		DatabaseAccount.SetAccountByID(fmt.Sprintf("%d", r.Userid))
 
@@ -41,7 +65,7 @@ func (r *InternalAccount) AccountInit() *InternalAccount {
 			UserID: DatabaseAccount.UserID,
 		}
 
-		r.SharedKeys = keysGetter.GetKeysList(r.Userid)
+		r.SharedKeys = keysGetter.GetKeysList()
 		r.Tariff = DatabaseAccount.Tariff
 		r.Active = DatabaseAccount.Active
 		r.Adblocker = false
@@ -72,29 +96,7 @@ func (r *InternalAccount) GetAdblocker() bool {
 	return r.Adblocker
 }
 
-func (r *InternalAccount) GetSharedKey(queryChan chan DatabaseQuery) []string {
-
-	if !r.Active {
-		r.Active = true
-	}
-
-	if len(r.SharedKeys) == 0 {
-		query := DatabaseQuery{
-			UserID:    r.Userid,
-			QueryType: "getKeysList",
-			Query:     fmt.Sprintf("%d", r.Userid),
-			ReplyChan: make(chan DatabaseAnswer),
-		}
-		queryChan <- query
-		answer := <-query.ReplyChan
-
-		if len(strings.Split(answer.Result, ",")) == 0 {
-			r.SharedKeys = []string{r.AddKey(queryChan)}
-		} else {
-			r.SharedKeys = strings.Split(answer.Result, ",")
-		}
-	}
-
+func (r *InternalAccount) GetSharedKey() []string {
 	return r.SharedKeys
 }
 
@@ -108,22 +110,20 @@ func (r *InternalAccount) GetActive() string {
 	return desc
 }
 
-func (r *InternalAccount) AddKey(queryChan chan DatabaseQuery) string {
-
-	query := DatabaseQuery{
-		UserID:    r.Userid,
-		QueryType: "pickupKey",
-		Query:     fmt.Sprintf("%d", r.Userid),
-		ReplyChan: make(chan DatabaseAnswer),
+func (r *InternalAccount) AccountExist() bool {
+	DatabaseAccount := dbaccount.DBAccount{
+		UserID: r.Userid,
 	}
+	DatabaseAccount = DatabaseAccount.GetAccount()
 
-	if len(r.GetSharedKey(queryChan)) == 2 {
-		return "Максимильное количество ключей"
+	return DatabaseAccount.UserID != 0
+}
+
+func (r *InternalAccount) RefferalBonus(userid int64, sum int64) int64 {
+	DatabaseAccount := dbaccount.DBAccount{
+		UserID: userid,
 	}
+	result := DatabaseAccount.IncrBalance(sum)
 
-	queryChan <- query
-	answer := <-query.ReplyChan
-
-	r.SharedKeys = append(r.SharedKeys, answer.Result)
-	return answer.Result
+	return result
 }
