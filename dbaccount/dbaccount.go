@@ -44,11 +44,11 @@ func (d DBAccount) GetAccount() DBAccount {
 	return d
 }
 
-func (d DBAccount) SetAccountByID(userid string) DBAccount {
+func (d DBAccount) SetAccount() DBAccount {
 
 	accountData, _ := json.Marshal(d)
 
-	acc_db.Set(ctx, userid, string(accountData), 0)
+	acc_db.Set(ctx, fmt.Sprintf("%d", d.UserID), string(accountData), 0)
 
 	return d
 }
@@ -79,4 +79,9 @@ func (d DBAccount) DecrBalance(sum int64) int64 {
 
 	balanceNumeric := acc_db.DecrBy(ctx, fmt.Sprintf("%d", d.UserID), sum).Val()
 	return balanceNumeric
+}
+
+func (d DBAccount) GetAccounts(filter string) []string {
+	accointIds, _ := acc_db.Keys(ctx, filter).Result()
+	return accointIds
 }

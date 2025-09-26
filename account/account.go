@@ -54,7 +54,7 @@ func (r *InternalAccount) AccountInit() *InternalAccount {
 		DatabaseAccount.Active = false
 		DatabaseAccount.Created = time.Now().Format("2006-01-02")
 
-		DatabaseAccount.SetAccountByID(fmt.Sprintf("%d", r.Userid))
+		DatabaseAccount.SetAccount()
 
 		r.SharedKeys = []string{}
 		r.Tariff = DatabaseAccount.Tariff
