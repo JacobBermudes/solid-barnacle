@@ -126,7 +126,7 @@ func (r *InternalAccount) AccountExist() bool {
 	}
 	DatabaseAccount = DatabaseAccount.GetAccount()
 
-	return DatabaseAccount.UserID != 0
+	return DatabaseAccount.Created != ""
 }
 
 func (r *InternalAccount) RefferalBonus(userid int64, sum int64) int64 {
