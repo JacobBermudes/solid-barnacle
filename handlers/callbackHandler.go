@@ -64,7 +64,7 @@ func (c CallbackHandler) Handle() tgbotapi.MessageConfig {
 
 func (c CallbackHandler) ShowHomePage() bool {
 
-	ActionsDontShowHome := []string{"homePage", "vpnConnect", "helpMenu", "paymentMenu", "updateBalance"}
+	ActionsDontShowHome := []string{"homePage", "vpnConnect", "helpMenu", "paymentMenu", "updateBalance", "referral", "help"}
 
 	actionsSet := make(map[string]bool, len(ActionsDontShowHome))
 	for _, action := range ActionsDontShowHome {

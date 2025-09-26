@@ -102,6 +102,11 @@ func (r *InternalAccount) GetAdblocker() bool {
 }
 
 func (r *InternalAccount) GetSharedKey() []string {
+	keysGetter := keys.KeyStorage{
+		UserID: r.Userid,
+	}
+
+	r.SharedKeys = keysGetter.GetKeysList()
 	return r.SharedKeys
 }
 

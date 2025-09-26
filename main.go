@@ -113,8 +113,7 @@ func main() {
 						},
 					}.AddKeyToStorage()
 
-					msg := tgbotapi.NewMessage(update.FromChat().ID, result)
-					msg.ChatID = update.FromChat().ID
+					msg := tgbotapi.NewMessage(update.Message.Chat.ID, result)
 					bot.Send(msg)
 				}
 
@@ -125,17 +124,16 @@ func main() {
 						refID := strings.TrimPrefix(refArgs, "ref")
 						if refID != fmt.Sprintf("%d", accountReader.GetUserID()) && !accountReader.AccountExist() {
 							msg := messenger.ThanksMsg()
-							msg.ChatID = update.FromChat().ID
+							msg.ChatID = update.Message.Chat.ID
 							bot.Send(msg)
 
 							friendID, _ := strconv.ParseInt(refID, 10, 64)
 							referralBonus := account.ReferralBonus{
-								CallerID: accountReader.GetUserID(),
-								FriendID: friendID,
+								FriendID: accountReader.GetUserID(),
+								CallerID: friendID,
 								Sum:      10,
 							}
-							msgBalance := tgbotapi.NewMessage(update.FromChat().ID, referralBonus.ApplyBonus())
-							msgBalance.ChatID = update.FromChat().ID
+							msgBalance := tgbotapi.NewMessage(update.Message.Chat.ID, referralBonus.ApplyBonus())
 							bot.Send(msgBalance)
 
 						}
