@@ -2,6 +2,7 @@ package msg
 
 import (
 	"fmt"
+	vpncoder "mmcvpn/vpn_coder"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -84,6 +85,12 @@ func (m MessageCreator) VpnConnectMsg(currentKeys []string) tgbotapi.MessageConf
 				break
 			}
 			msg.Text = msg.Text + fmt.Sprintf("%d. Ключ подключения: ```%s```\n", i+1, vpnKey)
+
+			coder := vpncoder.VpnConfig{
+				Key: vpnKey,
+			}
+			decodedConf, _ := coder.Decode()
+			msg.Text = msg.Text + "\n\n Расшифровка ```" + decodedConf + "```\n"
 		}
 		msg.Text = msg.Text + "\n\nДля быстрой настройки VPN-подключения скопируйте ключ подключения и вставьте в приложение!\n\n"
 	}
