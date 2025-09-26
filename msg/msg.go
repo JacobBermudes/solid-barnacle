@@ -90,7 +90,6 @@ func (m MessageCreator) VpnConnectMsg(currentKeys []string) tgbotapi.MessageConf
 				Key: vpnKey,
 			}
 			decodedConf, _ := decoder.Decode()
-			msg.Text = msg.Text + "\n\n Расшифровка ```" + decodedConf + "```"
 
 			encoder := vpncoder.VpnConfig{
 				Config: decodedConf,
