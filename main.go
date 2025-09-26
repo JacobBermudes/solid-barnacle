@@ -90,8 +90,7 @@ func main() {
 					},
 				}
 
-				responseMsg := callbackHandler.Handle()
-				bot.Send(responseMsg)
+				bot.Send(callbackHandler.Handle())
 
 				releaseButton := tgbotapi.NewCallback(callbackHandler.CallbackID, "")
 				if callbackHandler.ShowHomePage() {

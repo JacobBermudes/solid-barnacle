@@ -50,13 +50,11 @@ func (c CallbackHandler) Handle() tgbotapi.MessageConfig {
 	case "topup_fiat":
 		topupSum := int64(100)
 		sum := c.InternalAccount.TopupAccount(topupSum)
-
-		return tgbotapi.NewMessage(c.ChatID, fmt.Sprintf("Баланс успешно пополнен на %d рублей. Итого: %d", topupSum, sum))
+		return messenger.SuccessTopup(sum, topupSum)
 	case "topup_crypto":
 		topupSum := int64(100)
 		sum := c.InternalAccount.TopupAccount(topupSum)
-
-		return tgbotapi.NewMessage(c.ChatID, fmt.Sprintf("Баланс успешно пополнен на %d рублей. Итого: %d", topupSum, sum))
+		return messenger.SuccessTopup(sum, topupSum)
 	}
 
 	return tgbotapi.NewMessage(0, "Ошибка разбора команды. Пожалуйста обратитесь в поддержку.")

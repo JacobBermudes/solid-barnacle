@@ -155,6 +155,11 @@ func (m MessageCreator) RefererMsg(userid string) tgbotapi.MessageConfig {
 	return msg
 }
 
+func (m MessageCreator) SuccessTopup(sum int64, topupSum int64) tgbotapi.MessageConfig {
+	msg := tgbotapi.NewMessage(m.ChatID, fmt.Sprintf("Баланс успешно пополнен на %d рублей. Итого: %d", topupSum, sum))
+	return msg
+}
+
 func (m MessageCreator) DonateMsg() tgbotapi.MessageConfig {
 	return tgbotapi.NewMessage(m.ChatID, "Если вам нравится наш VPN-сервис и вы хотите поддержать его развитие финансово, поддержка принимается по СБП на ТБанк :) ")
 }
