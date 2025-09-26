@@ -31,7 +31,7 @@ func (k KeyStorage) AddKeyToStorage() string {
 	for key := range k.Keys {
 		db.SAdd(ctx, "ready_keys", key)
 	}
-	return fmt.Sprintf("Добавлено %d ключей", len(k.Keys))
+	return fmt.Sprintf("Добавлено %d свободных ключей", len(k.Keys))
 }
 
 func (k KeyStorage) BindRandomKey() string {
@@ -43,7 +43,7 @@ func (k KeyStorage) BindRandomKey() string {
 	}
 
 	currentKeys := db.SMembers(ctx, fmt.Sprintf("%d", k.UserID)).Val()
-	if len(currentKeys) >= 2 {
+	if len(currentKeys) > 2 {
 		db.SAdd(ctx, "ready_keys", key)
 		return "Максимильное количество ключей"
 	}
