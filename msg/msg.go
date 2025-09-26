@@ -86,11 +86,19 @@ func (m MessageCreator) VpnConnectMsg(currentKeys []string) tgbotapi.MessageConf
 			}
 			msg.Text = msg.Text + fmt.Sprintf("%d. Ключ подключения: ```%s```\n", i+1, vpnKey)
 
-			coder := vpncoder.VpnConfig{
+			decoder := vpncoder.VpnConfig{
 				Key: vpnKey,
 			}
-			decodedConf, _ := coder.Decode()
-			msg.Text = msg.Text + "\n\n Расшифровка " + decodedConf + ""
+			decodedConf, _ := decoder.Decode()
+			msg.Text = msg.Text + "\n\n Расшифровка ```" + decodedConf + "```"
+
+			encoder := vpncoder.VpnConfig{
+				Config: decodedConf,
+			}
+			encodedKey, _ := encoder.Encode()
+
+			msg.Text = msg.Text + "\n\n Зашифровка обратно ```" + encodedKey + "```"
+
 		}
 		msg.Text = msg.Text + "\n\nДля быстрой настройки VPN-подключения скопируйте ключ подключения и вставьте в приложение!\n\n"
 	}
