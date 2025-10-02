@@ -15,7 +15,7 @@ func (m MessageCreator) HomeMsg(username string, balance int64, tariff string, a
 
 	msg := tgbotapi.NewMessage(m.ChatID, "")
 
-	msg.Text = "Бот управления доступом Madjahead VPN" + "\n\n" +
+	msg.Text = "Бот управления доступом SurfBoost VPN" + "\n\n" +
 		"Пользователь " + username + "!\n\n" +
 		"Твой баланс: " + fmt.Sprintf("%d", balance) + "\n" +
 		"Тариф: " + tariff + "\n" +
@@ -108,16 +108,16 @@ func (m MessageCreator) HelpMenuMsg() tgbotapi.MessageConfig {
 	msg := tgbotapi.NewMessage(m.ChatID, "Для получения дальнейшей помощи по настройке VPN-соединения, пожалуйста, выберите вашу операционную систему:\n\n")
 	msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonURL("iPhone/iPad", "https://madjahead.com/help/ios"),
+			tgbotapi.NewInlineKeyboardButtonURL("iPhone/iPad", "https://surfboost.com/help/ios"),
 		),
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonURL("Android", "https://madjahead.com/help/android"),
+			tgbotapi.NewInlineKeyboardButtonURL("Android", "https://surfboost.com/help/android"),
 		),
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonURL("Windows", "https://madjahead.com/help/windows"),
+			tgbotapi.NewInlineKeyboardButtonURL("Windows", "https://surfboost.com/help/windows"),
 		),
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonURL("Linux", "https://madjahead.com/help/linux"),
+			tgbotapi.NewInlineKeyboardButtonURL("Linux", "https://surfboost.com/help/linux"),
 		),
 	)
 	return msg
@@ -132,7 +132,7 @@ func (m MessageCreator) RefererMsg(userid string) tgbotapi.MessageConfig {
 	msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("Главное меню", "homePage"),
-			tgbotapi.NewInlineKeyboardButtonSwitch("Поделиться ссылкой", "Присоединяйся к использованию Madjahead VPN по моей ссылке и получи бонус! 🎁\nСсылка для подключения: "+refLink),
+			tgbotapi.NewInlineKeyboardButtonSwitch("Поделиться ссылкой", "Присоединяйся к использованию SurfBoost VPN по моей ссылке и получи бонус! 🎁\nСсылка для подключения: "+refLink),
 		),
 	)
 
