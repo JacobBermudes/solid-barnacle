@@ -28,9 +28,15 @@ func (k KeyStorage) GetKeysList() []string {
 }
 
 func (k KeyStorage) AddKeyToStorage() string {
-	for key := range k.Keys {
-		db.SAdd(ctx, "ready_keys", key)
+
+	keys := make([]interface{}, len(k.Keys))
+
+	for i, key := range k.Keys {
+		keys[i] = key
 	}
+
+	db.SAdd(ctx, "ready_keys", keys...)
+
 	return fmt.Sprintf("Добавлено %d свободных ключей", len(k.Keys))
 }
 
