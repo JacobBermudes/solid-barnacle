@@ -148,6 +148,10 @@ func main() {
 						},
 					}
 
+					if update.Message.Command() == "addkey" {
+						key_sender = update.SentFrom().ID
+					}
+
 					commandHandledMsg := commandHandler.Handle()
 					bot.Send(commandHandledMsg)
 				}
