@@ -8,6 +8,7 @@ import (
 	"mmcvpn/handlers"
 	"mmcvpn/keys"
 	"mmcvpn/msg"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -61,6 +62,7 @@ func main() {
 	updates := bot.GetUpdatesChan(u)
 
 	go banking.Bank{}.StartMakePayments()
+	go startWebServer()
 
 	for update := range updates {
 
@@ -160,4 +162,15 @@ func main() {
 		}(update)
 
 	}
+}
+
+func startWebServer() {
+	http.HandleFunc("/auth", func(w http.ResponseWriter, r *http.Request) {
+		// ...реализация /auth...
+	})
+	http.HandleFunc("/keys", func(w http.ResponseWriter, r *http.Request) {
+		// ...реализация /keys...
+	})
+	log.Println("Web server started on :8080")
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
