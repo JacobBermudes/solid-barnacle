@@ -31,7 +31,7 @@ func (k KeyStorage) AddKeyToStorage() string {
 	for _, key := range k.Keys {
 		db.SAdd(ctx, "ready_keys", key)
 	}
-	return fmt.Sprintf("Добавлено %d свободных ключей", len(k.Keys))
+	return fmt.Sprintf("На данный момент %d свободных ключей, с учётом введённого!", k.CountReadyKeys())
 }
 
 func (k KeyStorage) BindRandomKey() string {
@@ -50,4 +50,12 @@ func (k KeyStorage) BindRandomKey() string {
 
 	db.SAdd(ctx, fmt.Sprintf("%d", k.UserID), key)
 	return fmt.Sprintf("Ключ ```%s``` успешно привязан к вашему аккаунту!", key)
+}
+
+func (k KeyStorage) CountReadyKeys() int64 {
+	count, err := db.SCard(ctx, "ready_keys").Result()
+	if err != nil {
+		return 0
+	}
+	return count
 }
