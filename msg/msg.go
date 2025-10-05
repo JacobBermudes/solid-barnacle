@@ -96,6 +96,7 @@ func (m MessageCreator) VpnConnectMsg(currentKeys []string) tgbotapi.MessageConf
 		),
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("Помощь с подключением", "helpMenu"),
+			tgbotapi.NewInlineKeyboardButtonData("Главное меню", "homePage"),
 		),
 	)
 	msg.ParseMode = "Markdown"
@@ -118,6 +119,9 @@ func (m MessageCreator) HelpMenuMsg() tgbotapi.MessageConfig {
 		),
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonURL("Linux", "https://surfboost.com/help/linux"),
+		),
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("Главное меню", "homePage"),
 		),
 	)
 	return msg
