@@ -1,0 +1,3 @@
+[submodule "supreme-dollop"]
+	path = supreme-dollop
+	url = https://github.com/JacobBermudes/supreme-dollop.git
