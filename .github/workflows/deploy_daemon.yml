@@ -1,4 +1,4 @@
-name: Deploy HAMAS VPN
+name: Deploy SurfBoost Daemon
 
 on:
   push:
