@@ -48,12 +48,15 @@ var key_sender int64
 func startTelebotWebAppHandler(token string) {
 	pref := tb.Settings{
 		Token: token,
-		URL:   "https://343ca17552a3.ngrok-free.app",
+		URL:   "https://api.telegram.org",
 		Poller: &tb.Webhook{
-			Listen:   ":8443",
-			Endpoint: &tb.WebhookEndpoint{PublicURL: "https://343ca17552a3.ngrok-free.app/webhook"},
-			// Cert: "path/to/cert.pem",
-			// Key:  "path/to/key.pem",
+			Listen: ":8443",
+			Endpoint: &tb.WebhookEndpoint{
+				PublicURL: "https://332c22edcf4b.ngrok-free.app/webhook"},
+			// TLS: &tb.WebhookTLS{
+			// 	Cert: "myvpn12.com.pem",
+			// 	Key:  "myvpn12.com-key.pem",
+			// },
 		},
 	}
 	bot, err := tb.NewBot(pref)
@@ -92,7 +95,7 @@ func main() {
 
 	go banking.Bank{}.StartMakePayments()
 
-	startTelebotWebAppHandler(botToken)
+	// startTelebotWebAppHandler(botToken)
 
 	for update := range updates {
 
