@@ -8,12 +8,13 @@ import (
 	"mmcvpn/handlers"
 	"mmcvpn/keys"
 	"mmcvpn/msg"
-	"net/http"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tb "gopkg.in/telebot.v3"
 )
 
 type mmcMsg interface {
@@ -45,6 +46,30 @@ type RedisReader interface {
 
 var key_sender int64
 
+func startTelebotWebAppHandler(token string) {
+	pref := tb.Settings{
+		Token:  token,
+		Poller: &tb.LongPoller{Timeout: 60 * time.Second},
+	}
+	bot, err := tb.NewBot(pref)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	bot.Handle(tb.OnText, func(c tb.Context) error {
+		if c.Message().WebAppData != nil {
+			data := c.Message().WebAppData.Data
+			if data == "vpnConnect" {
+				// ...ваша логика обработки...
+				return c.Send("Ваш VPN-ключ: ...")
+			}
+		}
+		return nil
+	})
+
+	go bot.Start()
+}
+
 func main() {
 
 	botToken := os.Getenv("TELEGRAM_BOT_TOKEN")
@@ -62,7 +87,9 @@ func main() {
 	updates := bot.GetUpdatesChan(u)
 
 	go banking.Bank{}.StartMakePayments()
-	go startWebServer()
+
+	// Запускаем telebot для WebAppData
+	startTelebotWebAppHandler(botToken)
 
 	for update := range updates {
 
@@ -156,21 +183,10 @@ func main() {
 
 					commandHandledMsg := commandHandler.Handle()
 					bot.Send(commandHandledMsg)
+					return
 				}
-
 			}
 		}(update)
 
 	}
-}
-
-func startWebServer() {
-	http.HandleFunc("/auth", func(w http.ResponseWriter, r *http.Request) {
-		// ...реализация /auth...
-	})
-	http.HandleFunc("/keys", func(w http.ResponseWriter, r *http.Request) {
-		// ...реализация /keys...
-	})
-	log.Println("Web server started on :8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
 }
