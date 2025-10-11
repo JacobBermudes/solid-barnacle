@@ -11,10 +11,9 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	tb "gopkg.in/telebot.v3"
+	tb "gopkg.in/telebot.v4"
 )
 
 type mmcMsg interface {
@@ -48,8 +47,14 @@ var key_sender int64
 
 func startTelebotWebAppHandler(token string) {
 	pref := tb.Settings{
-		Token:  token,
-		Poller: &tb.LongPoller{Timeout: 60 * time.Second},
+		Token: token,
+		URL:   "https://343ca17552a3.ngrok-free.app",
+		Poller: &tb.Webhook{
+			Listen:   ":8443",
+			Endpoint: &tb.WebhookEndpoint{PublicURL: "https://343ca17552a3.ngrok-free.app/webhook"},
+			// Cert: "path/to/cert.pem",
+			// Key:  "path/to/key.pem",
+		},
 	}
 	bot, err := tb.NewBot(pref)
 	if err != nil {
@@ -60,7 +65,6 @@ func startTelebotWebAppHandler(token string) {
 		if c.Message().WebAppData != nil {
 			data := c.Message().WebAppData.Data
 			if data == "vpnConnect" {
-				// ...ваша логика обработки...
 				return c.Send("Ваш VPN-ключ: ...")
 			}
 		}
@@ -88,7 +92,6 @@ func main() {
 
 	go banking.Bank{}.StartMakePayments()
 
-	// Запускаем telebot для WebAppData
 	startTelebotWebAppHandler(botToken)
 
 	for update := range updates {
