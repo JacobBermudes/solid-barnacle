@@ -1,24 +1,23 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"mmcvpn/account"
 	"mmcvpn/banking"
 	"mmcvpn/handlers"
-	"mmcvpn/keys"
 	"mmcvpn/msg"
 	"os"
-	"strconv"
-	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"gopkg.in/telebot.v4"
 	tb "gopkg.in/telebot.v4"
 )
 
 type mmcMsg interface {
-	HomeMsg(username string, balance int64, tariff string, adblocker bool, active string) tgbotapi.MessageConfig
-	VpnConnectMsg(currentKeys []string) tgbotapi.MessageConfig
+	HomeMsg_del(username string, balance int64, tariff string, adblocker bool, active string) tgbotapi.MessageConfig
+	HomeMsg(username string, balance int64, tariff string, adblocker bool, active string) string
+	VpnConnectMsg_del(currentKeys []string) tgbotapi.MessageConfig
+	VpnConnectMsg(currentKeys []string) string
 	PaymentMenuMsg(username string, balance int64) tgbotapi.MessageConfig
 	HelpMenuMsg() tgbotapi.MessageConfig
 	RefererMsg(userid string) tgbotapi.MessageConfig
@@ -50,13 +49,13 @@ func startTelebotWebAppHandler(token string) {
 		Token: token,
 		URL:   "https://api.telegram.org",
 		Poller: &tb.Webhook{
-			Listen: ":8443",
+			Listen: ":443",
 			Endpoint: &tb.WebhookEndpoint{
-				PublicURL: "https://332c22edcf4b.ngrok-free.app/webhook"},
-			// TLS: &tb.WebhookTLS{
-			// 	Cert: "myvpn12.com.pem",
-			// 	Key:  "myvpn12.com-key.pem",
-			// },
+				PublicURL: "https://phunkao.fun/webhook"},
+			TLS: &tb.WebhookTLS{
+				Cert: "/home/mickey/phunkao.fun.pem",
+				Key:  "/home/mickey/phunkao.fun-key.pem",
+			},
 		},
 	}
 	bot, err := tb.NewBot(pref)
@@ -64,15 +63,180 @@ func startTelebotWebAppHandler(token string) {
 		log.Fatal(err)
 	}
 
-	bot.Handle(tb.OnText, func(c tb.Context) error {
-		if c.Message().WebAppData != nil {
-			data := c.Message().WebAppData.Data
-			if data == "vpnConnect" {
-				return c.Send("Ваш VPN-ключ: ...")
-			}
+	bot.Handle("/start", func(c telebot.Context) error {
+		keyboard := &telebot.ReplyMarkup{
+			InlineKeyboard: [][]telebot.InlineButton{
+				{
+					telebot.InlineButton{
+						Unique: "vpnConnect",
+						Text:   "⚙️ Подключение к VPN",
+					},
+				},
+				{
+					telebot.InlineButton{
+						Unique: "paymentMenu",
+						Text:   "💲 Внесение оплаты за VPN",
+					},
+				},
+				{
+					telebot.InlineButton{
+						Unique: "referral",
+						Text:   "💵 Акция «Приведи друга»",
+					},
+				},
+				{
+					telebot.InlineButton{
+						Unique: "donate",
+						Text:   "💸 Пожертвовать",
+					},
+				},
+				{
+					telebot.InlineButton{
+						Unique: "help",
+						Text:   "💬 Помощь",
+					},
+				},
+			},
 		}
-		return nil
-	})
+
+		accountData := &account.InternalAccount{
+			Userid:   c.Sender().ID,
+			Username: c.Sender().Username,
+		}
+
+		if accountData.AccountExist() {
+			accountData.AccountInit()
+			msgText := messenger.HomeMsg(accountData.GetUsername(), accountData.GetBalance(), accountData.GetTariff(), accountData.GetAdblocker(), accountData.GetActive())
+			return c.Send(msgText, keyboard)
+		} else {
+			accountData.AccountInit()
+			accountData.TopupAccount(10)
+			// accountData.RefferalBonus()
+			msgText := messenger.HomeMsg(accountData.GetUsername(), accountData.GetBalance(), accountData.GetTariff(), accountData.GetAdblocker(), accountData.GetActive())
+			return c.Send(msgText, keyboard)
+		}
+	},
+	)
+
+	bot.Handle(tb.OnCallback, func(c telebot.Context) error {
+		var accountReader RedisReader = &account.InternalAccount{
+			Userid:   c.Sender().ID,
+			Username: c.Sender().Username,
+		}
+
+		accountReader.AccountInit()
+
+		callbackHandler := handlers.CallbackHandler{
+			Data:       c.Callback().Unique,
+			ChatID:     c.Message().Chat.ID,
+			CallbackID: c.Callback().ID,
+			ShowHome:   false,
+			InternalAccount: account.InternalAccount{
+				Userid:   c.Sender().ID,
+				Username: c.Sender().Username,
+			},
+		}
+
+		return c.Send(callbackHandler.Handle())
+	},
+	)
+
+	//OLD CODE
+
+	// if update.Message == nil && update.CallbackQuery == nil {
+	// 	return nil
+	// }
+
+	// go func(update tgbotapi.Update) {
+
+	// 	var accountReader RedisReader = &account.InternalAccount{
+	// 		Userid:   update.SentFrom().ID,
+	// 		Username: update.SentFrom().UserName,
+	// 	}
+
+	// 	if update.CallbackQuery != nil {
+
+	// 		accountReader.AccountInit()
+
+	// 		callbackHandler := handlers.CallbackHandler{
+	// 			Data:       update.CallbackQuery.Data,
+	// 			ChatID:     update.CallbackQuery.Message.Chat.ID,
+	// 			CallbackID: update.CallbackQuery.ID,
+	// 			ShowHome:   false,
+	// 			InternalAccount: account.InternalAccount{
+	// 				Userid:   update.SentFrom().ID,
+	// 				Username: update.SentFrom().UserName,
+	// 			},
+	// 		}
+
+	// 		bot.Send(callbackHandler.Handle())
+
+	// 		releaseButton := tgbotapi.NewCallback(callbackHandler.CallbackID, "")
+	// 		if callbackHandler.ShowHomePage() {
+	// 			homeMsg := messenger.HomeMsg(accountReader.GetUsername(), accountReader.GetBalance(), accountReader.GetTariff(), accountReader.GetAdblocker(), accountReader.GetActive())
+	// 			homeMsg.ChatID = callbackHandler.ChatID
+	// 			bot.Send(homeMsg)
+	// 			releaseButton.Text = "Вернулись в главное меню!"
+	// 		}
+	// 		bot.Request(releaseButton)
+	// 	} else if update.Message != nil {
+
+	// 		if key_sender == accountReader.GetUserID() {
+
+	// 			key_sender = 0
+
+	// 			result := keys.KeyStorage{
+	// 				Keys: []string{
+	// 					update.Message.Text,
+	// 				},
+	// 			}.AddKeyToStorage()
+
+	// 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, result)
+	// 			bot.Send(msg)
+	// 		}
+
+	// 		if update.Message.IsCommand() {
+
+	// 			refArgs := update.Message.CommandArguments()
+	// 			if strings.HasPrefix(refArgs, "ref") {
+	// 				refID := strings.TrimPrefix(refArgs, "ref")
+	// 				if refID != fmt.Sprintf("%d", accountReader.GetUserID()) && !accountReader.AccountExist() {
+	// 					msg := messenger.ThanksMsg()
+	// 					msg.ChatID = update.Message.Chat.ID
+	// 					bot.Send(msg)
+
+	// 					friendID, _ := strconv.ParseInt(refID, 10, 64)
+	// 					referralBonus := account.ReferralBonus{
+	// 						FriendID: accountReader.GetUserID(),
+	// 						CallerID: friendID,
+	// 						Sum:      10,
+	// 					}
+	// 					msgBalance := tgbotapi.NewMessage(update.Message.Chat.ID, referralBonus.ApplyBonus())
+	// 					bot.Send(msgBalance)
+
+	// 				}
+
+	// 			}
+
+	// 			commandHandler := handlers.CommandHandler{
+	// 				ChatID:  update.Message.Chat.ID,
+	// 				Command: update.Message.Command(),
+	// 				InternalAccount: account.InternalAccount{
+	// 					Userid:   update.SentFrom().ID,
+	// 					Username: update.SentFrom().UserName,
+	// 				},
+	// 			}
+
+	// 			if update.Message.Command() == "addkey" {
+	// 				key_sender = update.SentFrom().ID
+	// 			}
+
+	// 			commandHandledMsg := commandHandler.Handle()
+	// 			bot.Send(commandHandledMsg)
+	// 			return
+	// 		}
+	// 	}
+	// }(update)
 
 	go bot.Start()
 }
@@ -83,116 +247,116 @@ func main() {
 	if botToken == "" {
 		log.Fatal("TELEGRAM_BOT_TOKEN environment variable not set")
 	}
-	bot, err := tgbotapi.NewBotAPI(botToken)
-	if err != nil {
-		log.Fatalf("Failed to create bot: %v", err)
-	}
-	bot.Debug = false
-	log.Printf("Authorized on account %s", bot.Self.UserName)
-	u := tgbotapi.NewUpdate(0)
-	u.Timeout = 60
-	updates := bot.GetUpdatesChan(u)
+	// bot, err := tgbotapi.NewBotAPI(botToken)
+	// if err != nil {
+	// 	log.Fatalf("Failed to create bot: %v", err)
+	// }
+	// bot.Debug = false
+	// log.Printf("Authorized on account %s", bot.Self.UserName)
+	// u := tgbotapi.NewUpdate(0)
+	// u.Timeout = 60
+	// updates := bot.GetUpdatesChan(u)
 
 	go banking.Bank{}.StartMakePayments()
 
-	// startTelebotWebAppHandler(botToken)
+	startTelebotWebAppHandler(botToken)
 
-	for update := range updates {
+	// for update := range updates {
 
-		if update.Message == nil && update.CallbackQuery == nil {
-			continue
-		}
+	// 	if update.Message == nil && update.CallbackQuery == nil {
+	// 		continue
+	// 	}
 
-		go func(update tgbotapi.Update) {
+	// 	go func(update tgbotapi.Update) {
 
-			var accountReader RedisReader = &account.InternalAccount{
-				Userid:   update.SentFrom().ID,
-				Username: update.SentFrom().UserName,
-			}
+	// 		var accountReader RedisReader = &account.InternalAccount{
+	// 			Userid:   update.SentFrom().ID,
+	// 			Username: update.SentFrom().UserName,
+	// 		}
 
-			if update.CallbackQuery != nil {
+	// 		if update.CallbackQuery != nil {
 
-				accountReader.AccountInit()
+	// 			accountReader.AccountInit()
 
-				callbackHandler := handlers.CallbackHandler{
-					Data:       update.CallbackQuery.Data,
-					ChatID:     update.CallbackQuery.Message.Chat.ID,
-					CallbackID: update.CallbackQuery.ID,
-					ShowHome:   false,
-					InternalAccount: account.InternalAccount{
-						Userid:   update.SentFrom().ID,
-						Username: update.SentFrom().UserName,
-					},
-				}
+	// 			callbackHandler := handlers.CallbackHandler{
+	// 				Data:       update.CallbackQuery.Data,
+	// 				ChatID:     update.CallbackQuery.Message.Chat.ID,
+	// 				CallbackID: update.CallbackQuery.ID,
+	// 				ShowHome:   false,
+	// 				InternalAccount: account.InternalAccount{
+	// 					Userid:   update.SentFrom().ID,
+	// 					Username: update.SentFrom().UserName,
+	// 				},
+	// 			}
 
-				bot.Send(callbackHandler.Handle())
+	// 			bot.Send(callbackHandler.Handle())
 
-				releaseButton := tgbotapi.NewCallback(callbackHandler.CallbackID, "")
-				if callbackHandler.ShowHomePage() {
-					homeMsg := messenger.HomeMsg(accountReader.GetUsername(), accountReader.GetBalance(), accountReader.GetTariff(), accountReader.GetAdblocker(), accountReader.GetActive())
-					homeMsg.ChatID = callbackHandler.ChatID
-					bot.Send(homeMsg)
-					releaseButton.Text = "Вернулись в главное меню!"
-				}
-				bot.Request(releaseButton)
-			} else if update.Message != nil {
+	// 			releaseButton := tgbotapi.NewCallback(callbackHandler.CallbackID, "")
+	// 			if callbackHandler.ShowHomePage() {
+	// 				homeMsg := messenger.HomeMsg(accountReader.GetUsername(), accountReader.GetBalance(), accountReader.GetTariff(), accountReader.GetAdblocker(), accountReader.GetActive())
+	// 				homeMsg.ChatID = callbackHandler.ChatID
+	// 				bot.Send(homeMsg)
+	// 				releaseButton.Text = "Вернулись в главное меню!"
+	// 			}
+	// 			bot.Request(releaseButton)
+	// 		} else if update.Message != nil {
 
-				if key_sender == accountReader.GetUserID() {
+	// 			if key_sender == accountReader.GetUserID() {
 
-					key_sender = 0
+	// 				key_sender = 0
 
-					result := keys.KeyStorage{
-						Keys: []string{
-							update.Message.Text,
-						},
-					}.AddKeyToStorage()
+	// 				result := keys.KeyStorage{
+	// 					Keys: []string{
+	// 						update.Message.Text,
+	// 					},
+	// 				}.AddKeyToStorage()
 
-					msg := tgbotapi.NewMessage(update.Message.Chat.ID, result)
-					bot.Send(msg)
-				}
+	// 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, result)
+	// 				bot.Send(msg)
+	// 			}
 
-				if update.Message.IsCommand() {
+	// 			if update.Message.IsCommand() {
 
-					refArgs := update.Message.CommandArguments()
-					if strings.HasPrefix(refArgs, "ref") {
-						refID := strings.TrimPrefix(refArgs, "ref")
-						if refID != fmt.Sprintf("%d", accountReader.GetUserID()) && !accountReader.AccountExist() {
-							msg := messenger.ThanksMsg()
-							msg.ChatID = update.Message.Chat.ID
-							bot.Send(msg)
+	// 				refArgs := update.Message.CommandArguments()
+	// 				if strings.HasPrefix(refArgs, "ref") {
+	// 					refID := strings.TrimPrefix(refArgs, "ref")
+	// 					if refID != fmt.Sprintf("%d", accountReader.GetUserID()) && !accountReader.AccountExist() {
+	// 						msg := messenger.ThanksMsg()
+	// 						msg.ChatID = update.Message.Chat.ID
+	// 						bot.Send(msg)
 
-							friendID, _ := strconv.ParseInt(refID, 10, 64)
-							referralBonus := account.ReferralBonus{
-								FriendID: accountReader.GetUserID(),
-								CallerID: friendID,
-								Sum:      10,
-							}
-							msgBalance := tgbotapi.NewMessage(update.Message.Chat.ID, referralBonus.ApplyBonus())
-							bot.Send(msgBalance)
+	// 						friendID, _ := strconv.ParseInt(refID, 10, 64)
+	// 						referralBonus := account.ReferralBonus{
+	// 							FriendID: accountReader.GetUserID(),
+	// 							CallerID: friendID,
+	// 							Sum:      10,
+	// 						}
+	// 						msgBalance := tgbotapi.NewMessage(update.Message.Chat.ID, referralBonus.ApplyBonus())
+	// 						bot.Send(msgBalance)
 
-						}
+	// 					}
 
-					}
+	// 				}
 
-					commandHandler := handlers.CommandHandler{
-						ChatID:  update.Message.Chat.ID,
-						Command: update.Message.Command(),
-						InternalAccount: account.InternalAccount{
-							Userid:   update.SentFrom().ID,
-							Username: update.SentFrom().UserName,
-						},
-					}
+	// 				commandHandler := handlers.CommandHandler{
+	// 					ChatID:  update.Message.Chat.ID,
+	// 					Command: update.Message.Command(),
+	// 					InternalAccount: account.InternalAccount{
+	// 						Userid:   update.SentFrom().ID,
+	// 						Username: update.SentFrom().UserName,
+	// 					},
+	// 				}
 
-					if update.Message.Command() == "addkey" {
-						key_sender = update.SentFrom().ID
-					}
+	// 				if update.Message.Command() == "addkey" {
+	// 					key_sender = update.SentFrom().ID
+	// 				}
 
-					commandHandledMsg := commandHandler.Handle()
-					bot.Send(commandHandledMsg)
-					return
-				}
-			}
-		}(update)
+	// 				commandHandledMsg := commandHandler.Handle()
+	// 				bot.Send(commandHandledMsg)
+	// 				return
+	// 			}
+	// 		}
+	// 	}(update)
 
-	}
+	// }
 }

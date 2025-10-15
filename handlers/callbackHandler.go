@@ -17,7 +17,7 @@ type CallbackHandler struct {
 	InternalAccount account.InternalAccount
 }
 
-func (c CallbackHandler) Handle() tgbotapi.MessageConfig {
+func (c CallbackHandler) Handle() string {
 
 	messenger := msg.MessageCreator{
 		BotAddress: "https://t.me/mmcvpnbot",
@@ -26,11 +26,10 @@ func (c CallbackHandler) Handle() tgbotapi.MessageConfig {
 
 	switch c.Data {
 	case "bindKey":
-		msg := tgbotapi.NewMessage(c.ChatID, keys.KeyStorage{
+		BindedKey := keys.KeyStorage{
 			UserID: c.InternalAccount.Userid,
-		}.BindRandomKey())
-		msg.ParseMode = "Markdown"
-		return msg
+		}.BindRandomKey()
+		return BindedKey
 	case "homePage":
 		return messenger.HomeMsg(c.InternalAccount.GetUsername(), c.InternalAccount.GetBalance(), c.InternalAccount.GetTariff(), c.InternalAccount.GetAdblocker(), c.InternalAccount.GetActive())
 	case "vpnConnect":

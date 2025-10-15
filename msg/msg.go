@@ -11,7 +11,45 @@ type MessageCreator struct {
 	ChatID     int64
 }
 
-func (m MessageCreator) HomeMsg(username string, balance int64, tariff string, adblocker bool, active string) tgbotapi.MessageConfig {
+func (m MessageCreator) HomeMsg(username string, balance int64, tariff string, adblocker bool, active string) string {
+	return "Бот управления доступом SurfBoost VPN" + "\n\n" +
+		"Пользователь " + username + "!\n\n" +
+		"Твой баланс: " + fmt.Sprintf("%d", balance) + "\n" +
+		"Тариф: " + tariff + "\n" +
+		"Статус доступа к VPN: " + active + "\n"
+}
+
+func (m MessageCreator) BindKeyTxt(username string, balance int64, tariff string, adblocker bool, active string) string {
+	return "Бот управления доступом SurfBoost VPN" + "\n\n" +
+		"Пользователь " + username + "!\n\n" +
+		"Твой баланс: " + fmt.Sprintf("%d", balance) + "\n" +
+		"Тариф: " + tariff + "\n" +
+		"Статус доступа к VPN: " + active + "\n"
+}
+
+func (m MessageCreator) VpnConnectMsg(currentKeys []string) string {
+
+	text := ""
+
+	if len(currentKeys) == 0 {
+		text = "Ключи подключения отсутствуют. Пожалуйста добавьте ключ для подключения к VPN."
+	} else {
+		for i, vpnKey := range currentKeys {
+			if vpnKey == "" {
+				text = "Ключи подключения отсутствуют. Пожалуйста добавьте ключ для подключения к VPN."
+				break
+			}
+			text = text + fmt.Sprintf("%d. Ключ подключения: ```%s```\n", i+1, vpnKey)
+		}
+		text = text + "\n\nДля быстрой настройки VPN-подключения скопируйте ключ подключения и вставьте в приложение!\n\n"
+	}
+
+	text = text + "\nСсылки на приложение:\n	[IPhone/iPad](https://apps.apple.com/ru/app/defaultvpn/id6744725017) \n	[Android](https://play.google.com/store/apps/details?id=org.amnezia.vpn) \n	[Windows](https://github.com/amnezia-vpn/amnezia-client/releases/download/4.8.9.2/AmneziaVPN_4.8.9.2_windows_x64.exe) \n	[Linux](https://github.com/amnezia-vpn/amnezia-client/releases/download/4.8.9.2/AmneziaVPN_4.8.9.2_linux_x64.tar.zip)"
+
+	return text
+}
+
+func (m MessageCreator) HomeMsg_del(username string, balance int64, tariff string, adblocker bool, active string) tgbotapi.MessageConfig {
 
 	msg := tgbotapi.NewMessage(m.ChatID, "")
 
@@ -72,7 +110,7 @@ func (m MessageCreator) PaymentMenuMsg(username string, balance int64) tgbotapi.
 	return msg
 }
 
-func (m MessageCreator) VpnConnectMsg(currentKeys []string) tgbotapi.MessageConfig {
+func (m MessageCreator) VpnConnectMsg_del(currentKeys []string) tgbotapi.MessageConfig {
 
 	msg := tgbotapi.NewMessage(m.ChatID, "")
 	if len(currentKeys) == 0 {
