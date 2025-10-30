@@ -4,42 +4,101 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-func main() {
+type Item struct {
+	ID   int
+	Name string
+}
 
+func main() {
+	// === НАСТРОЙКИ ===
 	token := os.Getenv("TG_API")
+	if token == "" {
+		log.Fatal("TG_API не установлен! Установите переменную окружения.")
+	}
+
 	bot, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Ошибка создания бота:", err)
 	}
 
 	bot.Debug = true
+	log.Printf("Авторизован: @%s", bot.Self.UserName)
 
-	log.Printf("Authorized on account %s", bot.Self.UserName)
+	webhookURL := "https://www.phunkao.fun:8443/webhook"
+	webhook, _ := tgbotapi.NewWebhook(webhookURL)
 
-	wh, _ := tgbotapi.NewWebhookWithCert("https://www.phunkao.fun:8443/"+bot.Token, tgbotapi.FilePath("phunkao.fun.pem"))
+	certPath := "/etc/ssl/certs/phunkao.fun.key"
+	webhook.Certificate = tgbotapi.FilePath(certPath)
 
-	_, err = bot.Request(wh)
+	_, err = bot.Request(webhook)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Ошибка установки вебхука:", err)
 	}
+	log.Println("Вебхук установлен:", webhookURL)
 
-	info, err := bot.GetWebhookInfo()
-	if err != nil {
-		log.Fatal(err)
-	}
+	updates := bot.ListenForWebhook("/webhook")
 
-	if info.LastErrorDate != 0 {
-		log.Printf("Telegram callback failed: %s", info.LastErrorMessage)
-	}
-
-	updates := bot.ListenForWebhook("/" + bot.Token)
-	go http.ListenAndServeTLS("0.0.0.0:8443", "phunkao.fun.pem", "phunkao.fun-key.pem", nil)
+	go func() {
+		log.Println("Go-бот слушает на :8080 (HTTP)")
+		if err := http.ListenAndServe(":8080", nil); err != nil {
+			log.Fatal("Ошибка запуска HTTP-сервера:", err)
+		}
+	}()
 
 	for update := range updates {
-		log.Printf("%+v\n", update)
+		log.Printf("Получено обновление: %+v", update)
+
+		if update.Message != nil && update.Message.IsCommand() && update.Message.Command() == "start" {
+			items := []Item{
+				{1, "Яблоко"}, {2, "Банан"}, {3, "Вишня"},
+			}
+
+			var rows [][]tgbotapi.InlineKeyboardButton
+			for _, item := range items {
+				btn := tgbotapi.NewInlineKeyboardButtonData(
+					item.Name,
+					"item_"+strconv.Itoa(item.ID),
+				)
+				rows = append(rows, tgbotapi.NewInlineKeyboardRow(btn))
+			}
+
+			keyboard := tgbotapi.NewInlineKeyboardMarkup(rows...)
+
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Выберите фрукт:")
+			msg.ReplyMarkup = keyboard
+			bot.Send(msg)
+		}
+
+		if update.CallbackQuery != nil {
+			callback := update.CallbackQuery
+			data := callback.Data
+
+			if strings.HasPrefix(data, "item_") {
+				idStr := strings.TrimPrefix(data, "item_")
+				id, _ := strconv.Atoi(idStr)
+
+				fruits := map[int]string{1: "Яблоко", 2: "Банан", 3: "Вишня"}
+				name := fruits[id]
+				if name == "" {
+					name = "Неизвестно"
+				}
+
+				edit := tgbotapi.NewEditMessageText(
+					callback.Message.Chat.ID,
+					callback.Message.MessageID,
+					"Вы выбрали: *"+name+"* (ID: "+strconv.Itoa(id)+")",
+				)
+				edit.ParseMode = "Markdown"
+				bot.Send(edit)
+
+				bot.Request(tgbotapi.NewCallback(callback.ID, ""))
+			}
+		}
 	}
 }
