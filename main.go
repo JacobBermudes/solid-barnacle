@@ -16,7 +16,6 @@ type Item struct {
 }
 
 func main() {
-	// === НАСТРОЙКИ ===
 	token := os.Getenv("TG_API")
 	if token == "" {
 		log.Fatal("TG_API не установлен! Установите переменную окружения.")
