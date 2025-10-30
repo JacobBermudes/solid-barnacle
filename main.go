@@ -33,7 +33,7 @@ func main() {
 	webhookURL := "https://phunkao.fun:8443/webhook"
 	webhook, _ := tgbotapi.NewWebhook(webhookURL)
 
-	certPath := "/etc/letsencrypt/live/phunkao.fun/fullchain.pem"
+	certPath := "/etc/ssl/certs/phunkao.fun.pem"
 	webhook.Certificate = tgbotapi.FilePath(certPath)
 
 	_, err = bot.Request(webhook)
