@@ -29,7 +29,7 @@ func main() {
 	bot.Debug = true
 	log.Printf("Авторизован: @%s", bot.Self.UserName)
 
-	webhookURL := "https://phunkao.fun:8443/webhook"
+	webhookURL := "https://www.phunkao.fun:8443/webhook"
 	webhook, _ := tgbotapi.NewWebhook(webhookURL)
 
 	certPath := "/etc/ssl/certs/phunkao.fun.pem"
