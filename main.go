@@ -35,6 +35,8 @@ func main() {
 	certPath := "/etc/ssl/certs/phunkao.fun.pem"
 	webhook.Certificate = tgbotapi.FilePath(certPath)
 
+	webhook.AllowedUpdates = []string{"message", "callback_query"}
+
 	_, err = bot.Request(webhook)
 	if err != nil {
 		log.Fatal("Ошибка установки вебхука:", err)
