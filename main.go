@@ -32,7 +32,7 @@ func main() {
 	webhookURL := "https://www.phunkao.fun:8443/webhook"
 	webhook, _ := tgbotapi.NewWebhook(webhookURL)
 
-	certPath := "/etc/ssl/certs/phunkao.fun.pem"
+	certPath := "/etc/letsencrypt/live/phunkao.fun/fullchain.pem"
 	webhook.Certificate = tgbotapi.FilePath(certPath)
 
 	webhook.AllowedUpdates = []string{"message", "callback_query"}
