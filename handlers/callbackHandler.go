@@ -17,11 +17,22 @@ type CallbackHandler struct {
 	InternalAccount account.InternalAccount
 }
 
-func (c CallbackHandler) Handle() string {
+type CallbackResult struct {
+	Message     tgbotapi.MessageConfig
+	ReplyMarkup tgbotapi.InlineKeyboardMarkup
+	NewMessage  tgbotapi.MessageConfig
+}
+
+func (c CallbackHandler) HandleCallback() CallbackResult {
 
 	messenger := msg.MessageCreator{
 		BotAddress: "https://t.me/mmcvpnbot",
 		ChatID:     c.ChatID,
+	}
+
+	result := CallbackResult{
+		Message:     tgbotapi.NewMessage(c.ChatID, "Ошибка разбора команды. Пожалуйста обратитесь в поддержку."),
+		ReplyMarkup: tgbotapi.InlineKeyboardMarkup{},
 	}
 
 	switch c.Data {
@@ -29,34 +40,51 @@ func (c CallbackHandler) Handle() string {
 		BindedKey := keys.KeyStorage{
 			UserID: c.InternalAccount.Userid,
 		}.BindRandomKey()
-		return BindedKey
+		msg := tgbotapi.NewMessage(c.ChatID, BindedKey)
+		msg.ParseMode = "Markdown"
+		result.Message = msg
+		text := messenger.VpnConnectMsg(c.InternalAccount.GetSharedKey())
+		result.NewMessage = tgbotapi.NewMessage(c.ChatID, text)
+		result.NewMessage.ParseMode = "Markdown"
+		c.Data = "vpnConnect"
 	case "homePage":
-		return messenger.HomeMsg(c.InternalAccount.GetUsername(), c.InternalAccount.GetBalance(), c.InternalAccount.GetTariff(), c.InternalAccount.GetAdblocker(), c.InternalAccount.GetActive())
+		text := messenger.HomeMsg(c.InternalAccount.GetUsername(), c.InternalAccount.GetBalance(), c.InternalAccount.GetTariff(), c.InternalAccount.GetAdblocker(), c.InternalAccount.GetActive())
+		result.Message = tgbotapi.NewMessage(c.ChatID, text)
 	case "vpnConnect":
-		return messenger.VpnConnectMsg(c.InternalAccount.GetSharedKey())
+		text := messenger.VpnConnectMsg(c.InternalAccount.GetSharedKey())
+		result.Message = tgbotapi.NewMessage(c.ChatID, text)
 	case "helpMenu":
-		return messenger.HelpMenuMsg()
+		result.Message = tgbotapi.NewMessage(c.ChatID, messenger.HelpMenuMsg())
 	case "paymentMenu":
-		return messenger.PaymentMenuMsg(c.InternalAccount.GetUsername(), c.InternalAccount.GetBalance())
+		result.Message = tgbotapi.NewMessage(c.ChatID, messenger.PaymentMenuMsg(c.InternalAccount.GetUsername(), c.InternalAccount.GetBalance()))
 	case "updateBalance":
-		return messenger.PaymentMenuMsg(c.InternalAccount.GetUsername(), c.InternalAccount.GetBalance())
+		result.Message = tgbotapi.NewMessage(c.ChatID, messenger.PaymentMenuMsg(c.InternalAccount.GetUsername(), c.InternalAccount.GetBalance()))
 	case "referral":
-		return messenger.RefererMsg(fmt.Sprintf("%d", c.InternalAccount.GetUserID()))
+		result.Message = tgbotapi.NewMessage(c.ChatID, messenger.RefererMsg(fmt.Sprintf("%d", c.InternalAccount.GetUserID())))
 	case "donate":
-		return messenger.DonateMsg()
+		result.Message = tgbotapi.NewMessage(c.ChatID, messenger.DonateMsg())
 	case "help":
-		return messenger.HelpMenuMsg()
+		result.Message = tgbotapi.NewMessage(c.ChatID, messenger.HelpMenuMsg())
 	case "topup_fiat":
 		topupSum := int64(100)
 		sum := c.InternalAccount.TopupAccount(topupSum)
-		return messenger.SuccessTopup(sum, topupSum)
+		result.Message = tgbotapi.NewMessage(c.ChatID, messenger.SuccessTopup(sum, topupSum))
+		result.NewMessage = tgbotapi.NewMessage(c.ChatID, messenger.PaymentMenuMsg(c.InternalAccount.GetUsername(), sum))
+		result.NewMessage.ParseMode = "Markdown"
+		c.Data = "paymentMenu"
 	case "topup_crypto":
 		topupSum := int64(100)
 		sum := c.InternalAccount.TopupAccount(topupSum)
-		return messenger.SuccessTopup(sum, topupSum)
+		result.Message = tgbotapi.NewMessage(c.ChatID, messenger.SuccessTopup(sum, topupSum))
+		result.NewMessage = tgbotapi.NewMessage(c.ChatID, messenger.PaymentMenuMsg(c.InternalAccount.GetUsername(), sum))
+		result.NewMessage.ParseMode = "Markdown"
+		c.Data = "paymentMenu"
 	}
 
-	return tgbotapi.NewMessage(0, "Ошибка разбора команды. Пожалуйста обратитесь в поддержку.")
+	result.ReplyMarkup = messenger.GetInlineKeyboardMarkup(c.Data, c.InternalAccount.GetUserID())
+	result.Message.ParseMode = "Markdown"
+
+	return result
 }
 
 func (c CallbackHandler) ShowHomePage() bool {

@@ -1,43 +1,43 @@
-# name: Deploy SurfBoost Daemon
+name: Deploy SpeedBall Daemon
 
-# on:
-#   push:
-#     branches: ["main"]
+on:
+  push:
+    branches: ["main"]
 
-# jobs:
-#   build-and-deploy:
-#     runs-on: ubuntu-latest
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
 
-#     steps:
-#       - name: Checkout repo
-#         uses: actions/checkout@v4
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-#       - name: Set up Go
-#         uses: actions/setup-go@v5
-#         with:
-#           go-version: "1.24"
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
 
-#       - name: Build Go binary
-#         run: |
-#           go mod tidy
-#           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o speedballd main.go
+      - name: Build Go binary
+        run: |
+          go mod tidy
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o speedballd main.go
 
-#       - name: Copy binary to VPS
-#         uses: appleboy/scp-action@v0.1.7
-#         with:
-#           host: ${{ secrets.VPS_HOST }}
-#           username: ${{ secrets.VPS_USER }}
-#           key: ${{ secrets.VPS_SSH_KEY }}
-#           source: "speedballd"
-#           target: "/etc/speedBall-daemon"
+      - name: Copy binary to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "speedballd"
+          target: "/etc/speedBall-daemon"
 
-#       - name: Restart service on VPS
-#         uses: appleboy/ssh-action@v0.1.10
-#         with:
-#           host: ${{ secrets.VPS_HOST }}
-#           username: ${{ secrets.VPS_USER }}
-#           key: ${{ secrets.VPS_SSH_KEY }}
-#           script: |
-#             sudo systemctl stop speedBall_daemon || true
-#             chmod +x /etc/speedBall-daemon/speedballd
-#             sudo systemctl start speedBall_daemon
+      - name: Restart service on VPS
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            sudo systemctl stop speedBall_daemon || true
+            chmod +x /etc/speedBall-daemon/speedballd
+            sudo systemctl start speedBall_daemon
