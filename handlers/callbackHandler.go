@@ -45,6 +45,7 @@ func (c CallbackHandler) HandleCallback() CallbackResult {
 		result.Message = msg
 		text := messenger.VpnConnectMsg(c.InternalAccount.GetSharedKey())
 		result.NewMessage = tgbotapi.NewMessage(c.ChatID, text)
+		result.NewMessage.ParseMode = "Markdown"
 		c.Data = "vpnConnect"
 	case "homePage":
 		text := messenger.HomeMsg(c.InternalAccount.GetUsername(), c.InternalAccount.GetBalance(), c.InternalAccount.GetTariff(), c.InternalAccount.GetAdblocker(), c.InternalAccount.GetActive())
@@ -69,16 +70,19 @@ func (c CallbackHandler) HandleCallback() CallbackResult {
 		sum := c.InternalAccount.TopupAccount(topupSum)
 		result.Message = tgbotapi.NewMessage(c.ChatID, messenger.SuccessTopup(sum, topupSum))
 		result.NewMessage = tgbotapi.NewMessage(c.ChatID, messenger.PaymentMenuMsg(c.InternalAccount.GetUsername(), sum))
+		result.NewMessage.ParseMode = "Markdown"
 		c.Data = "paymentMenu"
 	case "topup_crypto":
 		topupSum := int64(100)
 		sum := c.InternalAccount.TopupAccount(topupSum)
 		result.Message = tgbotapi.NewMessage(c.ChatID, messenger.SuccessTopup(sum, topupSum))
 		result.NewMessage = tgbotapi.NewMessage(c.ChatID, messenger.PaymentMenuMsg(c.InternalAccount.GetUsername(), sum))
+		result.NewMessage.ParseMode = "Markdown"
 		c.Data = "paymentMenu"
 	}
 
 	result.ReplyMarkup = messenger.GetInlineKeyboardMarkup(c.Data, c.InternalAccount.GetUserID())
+	result.Message.ParseMode = "Markdown"
 
 	return result
 }
