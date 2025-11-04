@@ -31,7 +31,7 @@ func main() {
 
 	webhookURL := "https://www.phunkao.fun:8443/webhook"
 	certPath := "/home/mickey/solid-barnacle/fullchain.pem"
-	webhook, _ := tgbotapi.NewWebhookWithCert(webhookURL, tgbotapi.FilePath(certPath))
+	webhook, _ := tgbotapi.NewWebhook(webhookURL)
 
 	webhook.AllowedUpdates = []string{"message", "callback_query"}
 
