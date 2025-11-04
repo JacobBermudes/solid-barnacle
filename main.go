@@ -90,6 +90,8 @@ func main() {
 			bot.Send(editMsg)
 
 			bot.Request(tgbotapi.NewCallback(callback.ID, ""))
+
+			continue
 		}
 	}
 }

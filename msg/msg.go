@@ -150,7 +150,7 @@ func (m MessageCreator) GetInlineKeyboardMarkup(reqData string, uid int64) tgbot
 		)
 	}
 
-	return tgbotapi.InlineKeyboardMarkup{}
+	return tgbotapi.NewInlineKeyboardMarkup()
 }
 
 func (m MessageCreator) SuccessTopup(sum int64, topupSum int64) tgbotapi.MessageConfig {

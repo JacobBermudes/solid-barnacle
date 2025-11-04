@@ -14,8 +14,7 @@ type CommandHandler struct {
 }
 
 type CommandResult struct {
-	Message     tgbotapi.MessageConfig
-	ReplyMarkup tgbotapi.InlineKeyboardMarkup
+	Message tgbotapi.MessageConfig
 }
 
 func (c CommandHandler) HandleCommand() CommandResult {
@@ -26,8 +25,7 @@ func (c CommandHandler) HandleCommand() CommandResult {
 	}
 
 	result := CommandResult{
-		Message:     tgbotapi.NewMessage(c.ChatID, "Неизвестная команда.Обратитесь в поддержку"),
-		ReplyMarkup: tgbotapi.InlineKeyboardMarkup{},
+		Message: tgbotapi.NewMessage(c.ChatID, "Неизвестная команда.Обратитесь в поддержку"),
 	}
 
 	switch c.Command {
@@ -40,8 +38,7 @@ func (c CommandHandler) HandleCommand() CommandResult {
 		result.Message = messenger.VpnConnectMsg(c.InternalAccount.GetSharedKey())
 	}
 
-	result.ReplyMarkup = messenger.GetInlineKeyboardMarkup(c.Command, c.InternalAccount.GetUserID())
-	result.Message.ReplyMarkup = result.ReplyMarkup
+	result.Message.ReplyMarkup = messenger.GetInlineKeyboardMarkup(c.Command, c.InternalAccount.GetUserID())
 
 	return result
 }
