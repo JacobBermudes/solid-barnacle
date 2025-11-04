@@ -30,7 +30,6 @@ func main() {
 	log.Printf("Авторизован: @%s", bot.Self.UserName)
 
 	webhookURL := "https://www.phunkao.fun:8443/webhook"
-	certPath := "/home/mickey/solid-barnacle/fullchain.pem"
 	webhook, _ := tgbotapi.NewWebhook(webhookURL)
 
 	webhook.AllowedUpdates = []string{"message", "callback_query"}
@@ -44,8 +43,8 @@ func main() {
 	updates := bot.ListenForWebhook("/webhook")
 
 	go func() {
-		log.Println("Go-бот слушает на :8443 (HTTP)")
-		if err := http.ListenAndServeTLS(":8443", certPath, "/home/mickey/solid-barnacle/privkey.pem", nil); err != nil {
+		log.Println("Go-бот слушает на :8080 (HTTP)")
+		if err := http.ListenAndServe(":8080", nil); err != nil {
 			log.Fatal("Ошибка запуска HTTP-сервера:", err)
 		}
 	}()
@@ -72,6 +71,7 @@ func main() {
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Выберите фрукт:")
 			msg.ReplyMarkup = keyboard
 			bot.Send(msg)
+
 		}
 
 		if update.CallbackQuery != nil {
