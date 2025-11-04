@@ -21,6 +21,7 @@ func (m MessageCreator) HomeMsg(username string, balance int64, tariff string, a
 		"Тариф: " + tariff + "\n" +
 		"Статус доступа к VPN: " + active + "\n"
 
+	msg.ReplyMarkup = m.GetInlineKeyboardMarkup("homePage", 0)
 	return msg
 }
 
