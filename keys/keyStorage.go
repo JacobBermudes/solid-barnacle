@@ -43,9 +43,9 @@ func (k KeyStorage) BindRandomKey() string {
 	}
 
 	currentKeys := db.SMembers(ctx, fmt.Sprintf("%d", k.UserID)).Val()
-	if len(currentKeys) > 2 {
+	if len(currentKeys) == 2 {
 		db.SAdd(ctx, "ready_keys", key)
-		return "Максимильное количество ключей"
+		return "Максимильное количество ключей для одного пользователя — 2. Удалите ненужные ключи перед добавлением новых."
 	}
 
 	db.SAdd(ctx, fmt.Sprintf("%d", k.UserID), key)

@@ -42,6 +42,8 @@ func (c CallbackHandler) HandleCallback() CallbackResult {
 		}.BindRandomKey())
 		msg.ParseMode = "Markdown"
 		result.Message = msg
+		result.NewMessage = messenger.VpnConnectMsg(c.InternalAccount.GetSharedKey())
+		c.Data = "vpnConnect"
 	case "homePage":
 		result.Message = messenger.HomeMsg(c.InternalAccount.GetUsername(), c.InternalAccount.GetBalance(), c.InternalAccount.GetTariff(), c.InternalAccount.GetAdblocker(), c.InternalAccount.GetActive())
 	case "vpnConnect":

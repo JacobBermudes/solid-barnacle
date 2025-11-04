@@ -148,6 +148,12 @@ func (m MessageCreator) GetInlineKeyboardMarkup(reqData string, uid int64) tgbot
 				tgbotapi.NewInlineKeyboardButtonSwitch("Поделиться ссылкой", "Присоединяйся к использованию SurfBoost VPN по моей ссылке и получи бонус! 🎁\nСсылка для подключения: "+refLink),
 			),
 		)
+	case "donate":
+		return tgbotapi.NewInlineKeyboardMarkup(
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData("Главное меню", "homePage"),
+			),
+		)
 	}
 
 	return tgbotapi.InlineKeyboardMarkup{
