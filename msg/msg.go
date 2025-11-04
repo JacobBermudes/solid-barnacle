@@ -12,7 +12,7 @@ type MessageCreator struct {
 }
 
 func (m MessageCreator) HomeMsg(username string, balance int64, tariff string, adblocker bool, active string) string {
-	return "Бот управления доступом SurfBoost VPN" + "\n\n" +
+	return "Бот управления доступом AbsurfBoost VPN" + "\n\n" +
 		"Пользователь " + username + "!\n\n" +
 		"Твой баланс: " + fmt.Sprintf("%d", balance) + "\n" +
 		"Тариф: " + tariff + "\n" +
@@ -20,7 +20,7 @@ func (m MessageCreator) HomeMsg(username string, balance int64, tariff string, a
 }
 
 func (m MessageCreator) BindKeyTxt(username string, balance int64, tariff string, adblocker bool, active string) string {
-	return "Бот управления доступом SurfBoost VPN" + "\n\n" +
+	return "Бот управления доступом AbsurfBoost VPN" + "\n\n" +
 		"Пользователь " + username + "!\n\n" +
 		"Твой баланс: " + fmt.Sprintf("%d", balance) + "\n" +
 		"Тариф: " + tariff + "\n" +

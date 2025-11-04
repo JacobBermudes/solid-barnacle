@@ -36,6 +36,7 @@ func (c CommandHandler) HandleCommand() CommandResult {
 		result.Message = tgbotapi.NewMessage(c.ChatID, messenger.HomeMsg(c.InternalAccount.GetUsername(), c.InternalAccount.GetBalance(), c.InternalAccount.GetTariff(), c.InternalAccount.GetAdblocker(), c.InternalAccount.GetActive()))
 	case "connect":
 		result.Message = tgbotapi.NewMessage(c.ChatID, messenger.VpnConnectMsg(c.InternalAccount.GetSharedKey()))
+		result.Message.ParseMode = "Markdown"
 	}
 
 	result.Message.ReplyMarkup = messenger.GetInlineKeyboardMarkup(c.Command, c.InternalAccount.GetUserID())
