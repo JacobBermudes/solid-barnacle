@@ -17,18 +17,19 @@ type Item struct {
 }
 
 func main() {
-	token := os.Getenv("TG_API")
+
+	token := os.Getenv("TELEGRAM_BOT_TOKEN")
 	if token == "" {
-		log.Fatal("TG_API не установлен! Установите переменную окружения.")
+		log.Fatal("TELEGRAM_BOT_TOKEN environment variable not set")
 	}
 
 	bot, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
-		log.Fatal("Ошибка создания бота:", err)
+		log.Fatal("Bot create FAIL:", err)
 	}
 
 	bot.Debug = true
-	log.Printf("Авторизован: @%s", bot.Self.UserName)
+	log.Printf("Auth as: @%s", bot.Self.UserName)
 
 	webhookURL := "https://www.phunkao.fun:8443/webhook"
 	webhook, _ := tgbotapi.NewWebhook(webhookURL)
@@ -37,23 +38,23 @@ func main() {
 
 	_, err = bot.Request(webhook)
 	if err != nil {
-		log.Fatal("Ошибка установки вебхука:", err)
+		log.Fatal("Setting webhook FAIL:", err)
 	}
-	log.Println("Вебхук установлен:", webhookURL)
+	log.Println("Webhook setted:", webhookURL)
 
 	updates := bot.ListenForWebhook("/webhook")
 
 	go func() {
-		log.Println("Go-бот слушает на :8080 (HTTP)")
+		log.Println("Go back listening :8080 (HTTP)")
 		if err := http.ListenAndServe(":8080", nil); err != nil {
-			log.Fatal("Ошибка запуска HTTP-сервера:", err)
+			log.Fatal("HTTP Server FAULT:", err)
 		}
 	}()
 
 	keySender := int64(0)
 
 	for update := range updates {
-		log.Printf("Получено обновление: %+v", update)
+		log.Printf("Get update: %+v", update)
 
 		if update.Message != nil && update.Message.IsCommand() {
 

@@ -15,7 +15,7 @@ func (m MessageCreator) HomeMsg(username string, balance int64, tariff string, a
 
 	msg := tgbotapi.NewMessage(m.ChatID, "")
 
-	msg.Text = "Бот управления доступом SurfBoost VPN" + "\n\n" +
+	msg.Text = "Бот управления доступом AbsurfBoost VPN" + "\n\n" +
 		"Пользователь " + username + "!\n\n" +
 		"Твой баланс: " + fmt.Sprintf("%d", balance) + "\n" +
 		"Тариф: " + tariff + "\n" +
@@ -125,16 +125,16 @@ func (m MessageCreator) GetInlineKeyboardMarkup(reqData string, uid int64) tgbot
 	case "help":
 		return tgbotapi.NewInlineKeyboardMarkup(
 			tgbotapi.NewInlineKeyboardRow(
-				tgbotapi.NewInlineKeyboardButtonURL("iPhone/iPad", "https://surfboost.com/help/ios"),
+				tgbotapi.NewInlineKeyboardButtonURL("iPhone/iPad", "https://absurfboost.com/help/ios"),
 			),
 			tgbotapi.NewInlineKeyboardRow(
-				tgbotapi.NewInlineKeyboardButtonURL("Android", "https://surfboost.com/help/android"),
+				tgbotapi.NewInlineKeyboardButtonURL("Android", "https://absurfboost.com/help/android"),
 			),
 			tgbotapi.NewInlineKeyboardRow(
-				tgbotapi.NewInlineKeyboardButtonURL("Windows", "https://surfboost.com/help/windows"),
+				tgbotapi.NewInlineKeyboardButtonURL("Windows", "https://absurfboost.com/help/windows"),
 			),
 			tgbotapi.NewInlineKeyboardRow(
-				tgbotapi.NewInlineKeyboardButtonURL("Linux", "https://surfboost.com/help/linux"),
+				tgbotapi.NewInlineKeyboardButtonURL("Linux", "https://absurfboost.com/help/linux"),
 			),
 			tgbotapi.NewInlineKeyboardRow(
 				tgbotapi.NewInlineKeyboardButtonData("Главное меню", "homePage"),
@@ -145,7 +145,7 @@ func (m MessageCreator) GetInlineKeyboardMarkup(reqData string, uid int64) tgbot
 		return tgbotapi.NewInlineKeyboardMarkup(
 			tgbotapi.NewInlineKeyboardRow(
 				tgbotapi.NewInlineKeyboardButtonData("Главное меню", "homePage"),
-				tgbotapi.NewInlineKeyboardButtonSwitch("Поделиться ссылкой", "Присоединяйся к использованию SurfBoost VPN по моей ссылке и получи бонус! 🎁\nСсылка для подключения: "+refLink),
+				tgbotapi.NewInlineKeyboardButtonSwitch("Поделиться ссылкой", "Присоединяйся к использованию AbsurfBoost VPN по моей ссылке и получи бонус! 🎁\nСсылка для подключения: "+refLink),
 			),
 		)
 	case "donate":

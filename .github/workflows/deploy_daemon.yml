@@ -1,4 +1,4 @@
-name: Deploy SurfBoost Daemon
+name: Deploy SpeedBall Daemon
 
 on:
   push:
