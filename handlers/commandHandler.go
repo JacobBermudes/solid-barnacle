@@ -39,6 +39,7 @@ func (c CommandHandler) HandleCommand() CommandResult {
 	}
 
 	result.Message.ReplyMarkup = messenger.GetInlineKeyboardMarkup(c.Command, c.InternalAccount.GetUserID())
+	result.Message.ParseMode = "Markdown"
 
 	return result
 }
