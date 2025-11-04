@@ -63,11 +63,13 @@ func (c CallbackHandler) HandleCallback() CallbackResult {
 		sum := c.InternalAccount.TopupAccount(topupSum)
 		result.Message = messenger.SuccessTopup(sum, topupSum)
 		result.NewMessage = messenger.PaymentMenuMsg(c.InternalAccount.GetUsername(), sum)
+		c.Data = "paymentMenu"
 	case "topup_crypto":
 		topupSum := int64(100)
 		sum := c.InternalAccount.TopupAccount(topupSum)
 		result.Message = messenger.SuccessTopup(sum, topupSum)
 		result.NewMessage = messenger.PaymentMenuMsg(c.InternalAccount.GetUsername(), sum)
+		c.Data = "paymentMenu"
 	}
 
 	result.ReplyMarkup = messenger.GetInlineKeyboardMarkup(c.Data, c.InternalAccount.GetUserID())
