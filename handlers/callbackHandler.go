@@ -37,7 +37,7 @@ func (c CallbackHandler) HandleCallback() CallbackResult {
 
 	switch c.Data {
 	case "bindKey":
-		msg := tgbotapi.NewMessage(c.ChatID, keys.KeyStorage{
+		BindedKey := keys.KeyStorage{
 			UserID: c.InternalAccount.Userid,
 		}.BindRandomKey())
 		msg.ParseMode = "Markdown"
