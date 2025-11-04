@@ -20,6 +20,7 @@ type CallbackHandler struct {
 type CallbackResult struct {
 	Message     tgbotapi.MessageConfig
 	ReplyMarkup tgbotapi.InlineKeyboardMarkup
+	NewMessage  tgbotapi.MessageConfig
 }
 
 func (c CallbackHandler) HandleCallback() CallbackResult {
@@ -61,10 +62,12 @@ func (c CallbackHandler) HandleCallback() CallbackResult {
 		topupSum := int64(100)
 		sum := c.InternalAccount.TopupAccount(topupSum)
 		result.Message = messenger.SuccessTopup(sum, topupSum)
+		result.NewMessage = messenger.PaymentMenuMsg(c.InternalAccount.GetUsername(), sum)
 	case "topup_crypto":
 		topupSum := int64(100)
 		sum := c.InternalAccount.TopupAccount(topupSum)
 		result.Message = messenger.SuccessTopup(sum, topupSum)
+		result.NewMessage = messenger.PaymentMenuMsg(c.InternalAccount.GetUsername(), sum)
 	}
 
 	result.ReplyMarkup = messenger.GetInlineKeyboardMarkup(c.Data, c.InternalAccount.GetUserID())

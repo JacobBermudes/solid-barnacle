@@ -111,6 +111,10 @@ func main() {
 			editMsg.DisableWebPagePreview = callbackReslut.Message.DisableWebPagePreview
 			bot.Send(editMsg)
 
+			if callbackReslut.NewMessage.Text != "" {
+				bot.Send(callbackReslut.NewMessage)
+			}
+
 			bot.Request(tgbotapi.NewCallback(callback.ID, ""))
 
 			continue
