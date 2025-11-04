@@ -38,5 +38,7 @@ func (c CommandHandler) HandleCommand() CommandResult {
 		result.Message = messenger.VpnConnectMsg(c.InternalAccount.GetSharedKey())
 	}
 
+	result.Message.ReplyMarkup = messenger.GetInlineKeyboardMarkup(c.Command, c.InternalAccount.GetUserID())
+
 	return result
 }

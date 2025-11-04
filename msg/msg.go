@@ -21,7 +21,6 @@ func (m MessageCreator) HomeMsg(username string, balance int64, tariff string, a
 		"Тариф: " + tariff + "\n" +
 		"Статус доступа к VPN: " + active + "\n"
 
-	msg.ReplyMarkup = m.GetInlineKeyboardMarkup("homePage", 0)
 	return msg
 }
 
@@ -79,8 +78,8 @@ func (m MessageCreator) RefererMsg(userid string) tgbotapi.MessageConfig {
 
 func (m MessageCreator) GetInlineKeyboardMarkup(reqData string, uid int64) tgbotapi.InlineKeyboardMarkup {
 	switch reqData {
-	case "homePage":
-		kb := tgbotapi.NewInlineKeyboardMarkup(
+	case "homePage", "start":
+		return tgbotapi.NewInlineKeyboardMarkup(
 			tgbotapi.NewInlineKeyboardRow(
 				tgbotapi.NewInlineKeyboardButtonData("⚙️ Подключение к VPN", "vpnConnect"),
 			),
@@ -97,7 +96,6 @@ func (m MessageCreator) GetInlineKeyboardMarkup(reqData string, uid int64) tgbot
 				tgbotapi.NewInlineKeyboardButtonData("💬 Помощь", "help"),
 			),
 		)
-		return kb
 	case "paymentMenu":
 		return tgbotapi.NewInlineKeyboardMarkup(
 			tgbotapi.NewInlineKeyboardRow(
