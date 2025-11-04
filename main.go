@@ -108,6 +108,7 @@ func main() {
 				callbackReslut.ReplyMarkup,
 			)
 			editMsg.ParseMode = callbackReslut.Message.ParseMode
+			editMsg.DisableWebPagePreview = callbackReslut.Message.DisableWebPagePreview
 			bot.Send(editMsg)
 
 			bot.Request(tgbotapi.NewCallback(callback.ID, ""))

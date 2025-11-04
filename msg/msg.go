@@ -112,7 +112,7 @@ func (m MessageCreator) GetInlineKeyboardMarkup(reqData string, uid int64) tgbot
 				tgbotapi.NewInlineKeyboardButtonData("Главное меню", "homePage"),
 			),
 		)
-	case "vpnConnect":
+	case "vpnConnect", "connect":
 		return tgbotapi.NewInlineKeyboardMarkup(
 			tgbotapi.NewInlineKeyboardRow(
 				tgbotapi.NewInlineKeyboardButtonData("Добавить ключ", "bindKey"),
@@ -150,7 +150,9 @@ func (m MessageCreator) GetInlineKeyboardMarkup(reqData string, uid int64) tgbot
 		)
 	}
 
-	return tgbotapi.NewInlineKeyboardMarkup()
+	return tgbotapi.InlineKeyboardMarkup{
+		InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{},
+	}
 }
 
 func (m MessageCreator) SuccessTopup(sum int64, topupSum int64) tgbotapi.MessageConfig {
