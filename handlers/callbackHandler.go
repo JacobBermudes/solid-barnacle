@@ -75,7 +75,6 @@ func (c CallbackHandler) HandleCallback() CallbackResult {
 	}
 
 	result.ReplyMarkup = messenger.GetInlineKeyboardMarkup(c.Data, c.InternalAccount.GetUserID())
-	result.Message.ReplyMarkup = result.ReplyMarkup
 
 	return result
 }

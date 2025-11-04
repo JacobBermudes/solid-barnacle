@@ -99,23 +99,25 @@ func main() {
 				InternalAccount: account.InternalAccount{Userid: callback.From.ID, Username: callback.From.UserName},
 			}
 
-			callbackReslut := callbackHandler.HandleCallback()
+			callbackResult := callbackHandler.HandleCallback()
 
 			editMsg := tgbotapi.NewEditMessageTextAndMarkup(
 				callback.Message.Chat.ID,
 				callback.Message.MessageID,
-				callbackReslut.Message.Text,
-				callbackReslut.ReplyMarkup,
+				callbackResult.Message.Text,
+				callbackResult.ReplyMarkup,
 			)
-			editMsg.ParseMode = callbackReslut.Message.ParseMode
-			editMsg.DisableWebPagePreview = callbackReslut.Message.DisableWebPagePreview
-			bot.Send(editMsg)
-
-			if callbackReslut.NewMessage.Text != "" {
-				newMsg := callbackReslut.NewMessage
-				newMsg.ReplyMarkup = callbackReslut.ReplyMarkup
+			if callbackResult.NewMessage.Text != "" {
+				newMsg := callbackResult.NewMessage
+				newMsg.ReplyMarkup = callbackResult.ReplyMarkup
 				bot.Send(newMsg)
+				editMsg.ReplyMarkup = &tgbotapi.InlineKeyboardMarkup{
+					InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{},
+				}
 			}
+			editMsg.ParseMode = callbackResult.Message.ParseMode
+			editMsg.DisableWebPagePreview = callbackResult.Message.DisableWebPagePreview
+			bot.Send(editMsg)
 
 			bot.Request(tgbotapi.NewCallback(callback.ID, ""))
 
