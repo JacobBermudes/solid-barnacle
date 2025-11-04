@@ -39,38 +39,42 @@ func (c CallbackHandler) HandleCallback() CallbackResult {
 	case "bindKey":
 		BindedKey := keys.KeyStorage{
 			UserID: c.InternalAccount.Userid,
-		}.BindRandomKey())
+		}.BindRandomKey()
+		msg := tgbotapi.NewMessage(c.ChatID, BindedKey)
 		msg.ParseMode = "Markdown"
 		result.Message = msg
-		result.NewMessage = messenger.VpnConnectMsg(c.InternalAccount.GetSharedKey())
+		text := messenger.VpnConnectMsg(c.InternalAccount.GetSharedKey())
+		result.NewMessage = tgbotapi.NewMessage(c.ChatID, text)
 		c.Data = "vpnConnect"
 	case "homePage":
-		result.Message = messenger.HomeMsg(c.InternalAccount.GetUsername(), c.InternalAccount.GetBalance(), c.InternalAccount.GetTariff(), c.InternalAccount.GetAdblocker(), c.InternalAccount.GetActive())
+		text := messenger.HomeMsg(c.InternalAccount.GetUsername(), c.InternalAccount.GetBalance(), c.InternalAccount.GetTariff(), c.InternalAccount.GetAdblocker(), c.InternalAccount.GetActive())
+		result.Message = tgbotapi.NewMessage(c.ChatID, text)
 	case "vpnConnect":
-		result.Message = messenger.VpnConnectMsg(c.InternalAccount.GetSharedKey())
+		text := messenger.VpnConnectMsg(c.InternalAccount.GetSharedKey())
+		result.Message = tgbotapi.NewMessage(c.ChatID, text)
 	case "helpMenu":
-		result.Message = messenger.HelpMenuMsg()
+		result.Message = tgbotapi.NewMessage(c.ChatID, messenger.HelpMenuMsg())
 	case "paymentMenu":
-		result.Message = messenger.PaymentMenuMsg(c.InternalAccount.GetUsername(), c.InternalAccount.GetBalance())
+		result.Message = tgbotapi.NewMessage(c.ChatID, messenger.PaymentMenuMsg(c.InternalAccount.GetUsername(), c.InternalAccount.GetBalance()))
 	case "updateBalance":
-		result.Message = messenger.PaymentMenuMsg(c.InternalAccount.GetUsername(), c.InternalAccount.GetBalance())
+		result.Message = tgbotapi.NewMessage(c.ChatID, messenger.PaymentMenuMsg(c.InternalAccount.GetUsername(), c.InternalAccount.GetBalance()))
 	case "referral":
-		result.Message = messenger.RefererMsg(fmt.Sprintf("%d", c.InternalAccount.GetUserID()))
+		result.Message = tgbotapi.NewMessage(c.ChatID, messenger.RefererMsg(fmt.Sprintf("%d", c.InternalAccount.GetUserID())))
 	case "donate":
-		result.Message = messenger.DonateMsg()
+		result.Message = tgbotapi.NewMessage(c.ChatID, messenger.DonateMsg())
 	case "help":
-		result.Message = messenger.HelpMenuMsg()
+		result.Message = tgbotapi.NewMessage(c.ChatID, messenger.HelpMenuMsg())
 	case "topup_fiat":
 		topupSum := int64(100)
 		sum := c.InternalAccount.TopupAccount(topupSum)
 		result.Message = messenger.SuccessTopup(sum, topupSum)
-		result.NewMessage = messenger.PaymentMenuMsg(c.InternalAccount.GetUsername(), sum)
+		result.NewMessage = tgbotapi.NewMessage(c.ChatID, messenger.PaymentMenuMsg(c.InternalAccount.GetUsername(), sum))
 		c.Data = "paymentMenu"
 	case "topup_crypto":
 		topupSum := int64(100)
 		sum := c.InternalAccount.TopupAccount(topupSum)
 		result.Message = messenger.SuccessTopup(sum, topupSum)
-		result.NewMessage = messenger.PaymentMenuMsg(c.InternalAccount.GetUsername(), sum)
+		result.NewMessage = tgbotapi.NewMessage(c.ChatID, messenger.PaymentMenuMsg(c.InternalAccount.GetUsername(), sum))
 		c.Data = "paymentMenu"
 	}
 
