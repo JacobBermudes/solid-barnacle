@@ -4,6 +4,7 @@ import (
 	"log"
 	"mmcvpn/account"
 	"mmcvpn/handlers"
+	"mmcvpn/keys"
 	"net/http"
 	"os"
 
@@ -49,6 +50,8 @@ func main() {
 		}
 	}()
 
+	keySender := int64(0)
+
 	for update := range updates {
 		log.Printf("Получено обновление: %+v", update)
 
@@ -63,8 +66,26 @@ func main() {
 			commandResult := commandHandler.HandleCommand()
 
 			bot.Send(commandResult.Message)
+
+			if update.Message.Command() == "addkey" {
+				keySender = update.Message.From.ID
+			}
 			continue
 
+		}
+
+		if keySender == update.Message.From.ID {
+			keyStorage := keys.KeyStorage{
+				UserID: keySender,
+				Keys:   []string{update.Message.Text},
+			}
+
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, keyStorage.AddKeyToStorage())
+			msg.ParseMode = "Markdown"
+			bot.Send(msg)
+
+			keySender = 0
+			continue
 		}
 
 		if update.CallbackQuery != nil {
