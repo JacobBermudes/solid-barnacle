@@ -154,8 +154,7 @@ func (m MessageCreator) GetInlineKeyboardMarkup(reqData string, uid int64) tgbot
 }
 
 func (m MessageCreator) SuccessTopup(sum int64, topupSum int64) tgbotapi.MessageConfig {
-	msg := tgbotapi.NewMessage(m.ChatID, fmt.Sprintf("Баланс успешно пополнен на %d рублей. Итого: %d", topupSum, sum))
-	return msg
+	return tgbotapi.NewMessage(m.ChatID, fmt.Sprintf("Баланс успешно пополнен на %d рублей. Итого: %d", topupSum, sum))
 }
 
 func (m MessageCreator) DonateMsg() tgbotapi.MessageConfig {
@@ -163,6 +162,5 @@ func (m MessageCreator) DonateMsg() tgbotapi.MessageConfig {
 }
 
 func (m MessageCreator) ThanksMsg() tgbotapi.MessageConfig {
-	msg := tgbotapi.NewMessage(m.ChatID, "Спасибо за регистрацию по реферальной ссылке!")
-	return msg
+	return tgbotapi.NewMessage(m.ChatID, "Спасибо за регистрацию по реферальной ссылке!")
 }
