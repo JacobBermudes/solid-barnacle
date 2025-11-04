@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"mmcvpn/commandHandler"
 	"net/http"
 	"os"
 	"strconv"
@@ -52,25 +53,36 @@ func main() {
 	for update := range updates {
 		log.Printf("Получено обновление: %+v", update)
 
-		if update.Message != nil && update.Message.IsCommand() && update.Message.Command() == "start" {
-			items := []Item{
-				{1, "Яблоко"}, {2, "Банан"}, {3, "Вишня"},
+		if update.Message != nil && update.Message.IsCommand() {
+			// items := []Item{
+			// 	{1, "Яблоко"}, {2, "Банан"}, {3, "Вишня"},
+			// }
+
+			// var rows [][]tgbotapi.InlineKeyboardButton
+			// for _, item := range items {
+			// 	btn := tgbotapi.NewInlineKeyboardButtonData(
+			// 		item.Name,
+			// 		"item_"+strconv.Itoa(item.ID),
+			// 	)
+			// 	rows = append(rows, tgbotapi.NewInlineKeyboardRow(btn))
+			// }
+
+			// keyboard := tgbotapi.NewInlineKeyboardMarkup(rows...)
+
+			// msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Выберите фрукт:")
+			// msg.ReplyMarkup = keyboard
+			// bot.Send(msg)
+
+			commandHandler := commandHandler.CommandHandler{
+				ChatID:          update.Message.Chat.ID,
+				Command:         update.Message.Command(),
+				InternalAccount: commandHandler.InternalAccount{Userid: update.Message.From.ID, Username: update.Message.From.UserName},
 			}
 
-			var rows [][]tgbotapi.InlineKeyboardButton
-			for _, item := range items {
-				btn := tgbotapi.NewInlineKeyboardButtonData(
-					item.Name,
-					"item_"+strconv.Itoa(item.ID),
-				)
-				rows = append(rows, tgbotapi.NewInlineKeyboardRow(btn))
-			}
+			commandResult := commandHandler.HandleCommand()
 
-			keyboard := tgbotapi.NewInlineKeyboardMarkup(rows...)
-
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Выберите фрукт:")
-			msg.ReplyMarkup = keyboard
-			bot.Send(msg)
+			bot.Send(commandResult.Message)
+			continue
 
 		}
 

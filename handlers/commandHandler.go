@@ -13,22 +13,30 @@ type CommandHandler struct {
 	InternalAccount account.InternalAccount
 }
 
-func (c CommandHandler) Handle() tgbotapi.MessageConfig {
+type CommandResult struct {
+	Message tgbotapi.MessageConfig
+}
+
+func (c CommandHandler) HandleCommand() CommandResult {
 
 	messenger := msg.MessageCreator{
 		BotAddress: "https://t.me/mmcvpnbot",
 		ChatID:     c.ChatID,
 	}
 
-	switch c.Command {
-	case "addkey":
-		return tgbotapi.NewMessage(c.ChatID, "Ожидаем ключа включая VPN://")
-	case "start":
-		c.InternalAccount.AccountInit()
-		return messenger.HomeMsg(c.InternalAccount.GetUsername(), c.InternalAccount.GetBalance(), c.InternalAccount.GetTariff(), c.InternalAccount.GetAdblocker(), c.InternalAccount.GetActive())
-	case "connect":
-		return messenger.VpnConnectMsg(c.InternalAccount.GetSharedKey())
+	result := CommandResult{
+		Message: tgbotapi.NewMessage(c.ChatID, "Неизвестная команда.Обратитесь в поддержку"),
 	}
 
-	return tgbotapi.NewMessage(0, "Ошибка разбора команды.Обратитесь в поддержку")
+	switch c.Command {
+	case "addkey":
+		result.Message = tgbotapi.NewMessage(c.ChatID, "Ожидаем ключа включая VPN://")
+	case "start":
+		c.InternalAccount.AccountInit()
+		result.Message = messenger.HomeMsg(c.InternalAccount.GetUsername(), c.InternalAccount.GetBalance(), c.InternalAccount.GetTariff(), c.InternalAccount.GetAdblocker(), c.InternalAccount.GetActive())
+	case "connect":
+		result.Message = messenger.VpnConnectMsg(c.InternalAccount.GetSharedKey())
+	}
+
+	return result
 }
