@@ -30,10 +30,8 @@ func main() {
 	log.Printf("Авторизован: @%s", bot.Self.UserName)
 
 	webhookURL := "https://www.phunkao.fun:8443/webhook"
-	webhook, _ := tgbotapi.NewWebhook(webhookURL)
-
 	certPath := "/home/mickey/solid-barnacle/fullchain.pem"
-	webhook.Certificate = tgbotapi.FilePath(certPath)
+	webhook, _ := tgbotapi.NewWebhookWithCert(webhookURL, tgbotapi.FilePath(certPath))
 
 	webhook.AllowedUpdates = []string{"message", "callback_query"}
 
