@@ -21,24 +21,6 @@ func (m MessageCreator) HomeMsg(username string, balance int64, tariff string, a
 		"Тариф: " + tariff + "\n" +
 		"Статус доступа к VPN: " + active + "\n"
 
-	msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("⚙️ Подключение к VPN", "vpnConnect"),
-		),
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("💲 Внесение оплаты за VPN", "paymentMenu"),
-		),
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("💵 Акция «Приведи друга»", "referral"),
-		),
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("💸 Пожертвовать", "donate"),
-		),
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("💬 Помощь", "help"),
-		),
-	)
-
 	return msg
 }
 
@@ -53,22 +35,6 @@ func (m MessageCreator) PaymentMenuMsg(username string, balance int64) tgbotapi.
 		"- Списание с баланса происходит автоматически согласно вашему тарифу.\n\n"+
 		"🔍 Хотите пополнить баланс или изменить тариф? Используйте кнопки ниже! 👇")
 	msg.ParseMode = "Markdown"
-	msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("Пополнить банковской картой", "topup_fiat"),
-			tgbotapi.NewInlineKeyboardButtonData("Пополнить криптовалютой", "topup_crypto"),
-		),
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("Проверить поступления", "updateBalance"),
-		),
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("Изменить тариф", "changeTariff"),
-		),
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("Главное меню", "homePage"),
-		),
-	)
-
 	return msg
 }
 
@@ -90,15 +56,6 @@ func (m MessageCreator) VpnConnectMsg(currentKeys []string) tgbotapi.MessageConf
 
 	msg.Text = msg.Text + "\nСсылки на приложение:\n	[IPhone/iPad](https://apps.apple.com/ru/app/defaultvpn/id6744725017) \n	[Android](https://play.google.com/store/apps/details?id=org.amnezia.vpn) \n	[Windows](https://github.com/amnezia-vpn/amnezia-client/releases/download/4.8.9.2/AmneziaVPN_4.8.9.2_windows_x64.exe) \n	[Linux](https://github.com/amnezia-vpn/amnezia-client/releases/download/4.8.9.2/AmneziaVPN_4.8.9.2_linux_x64.tar.zip)"
 
-	msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("Добавить ключ", "bindKey"),
-		),
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("Помощь с подключением", "helpMenu"),
-			tgbotapi.NewInlineKeyboardButtonData("Главное меню", "homePage"),
-		),
-	)
 	msg.ParseMode = "Markdown"
 	msg.DisableWebPagePreview = true
 
@@ -106,26 +63,7 @@ func (m MessageCreator) VpnConnectMsg(currentKeys []string) tgbotapi.MessageConf
 }
 
 func (m MessageCreator) HelpMenuMsg() tgbotapi.MessageConfig {
-	msg := tgbotapi.NewMessage(m.ChatID, "Для получения дальнейшей помощи по настройке VPN-соединения, пожалуйста, выберите вашу операционную систему:\n\n")
-	msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonURL("iPhone/iPad", "https://surfboost.com/help/ios"),
-		),
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonURL("Android", "https://surfboost.com/help/android"),
-		),
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonURL("Windows", "https://surfboost.com/help/windows"),
-		),
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonURL("Linux", "https://surfboost.com/help/linux"),
-		),
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("Главное меню", "homePage"),
-		),
-	)
-	return msg
-
+	return tgbotapi.NewMessage(m.ChatID, "Для получения дальнейшей помощи по настройке VPN-соединения, пожалуйста, выберите вашу операционную систему:\n\n")
 }
 
 func (m MessageCreator) RefererMsg(userid string) tgbotapi.MessageConfig {
@@ -133,16 +71,86 @@ func (m MessageCreator) RefererMsg(userid string) tgbotapi.MessageConfig {
 
 	msg := tgbotapi.NewMessage(m.ChatID, "💵Акция «Приведи друга»💵\n\nПриглашайте друзей и получайте бонусы на баланс!\n\nЗа каждого приглашенного друга вы и ваш друг получит 10 рублей на баланс для тестирования сервиса.\n\nДля участия в акции просто поделитесь своей уникальной ссылкой приглашения:\n\n`"+refLink+"`\n\nЧем больше друзей вы пригласите, тем больше бонусов получите! Акция действует без ограничений по количеству приглашенных друзей.\n\nСпасибо, что выбираете наш VPN-сервис! Вместе мы сделаем интернет безопаснее и доступнее для всех.")
 
-	msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
-		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData("Главное меню", "homePage"),
-			tgbotapi.NewInlineKeyboardButtonSwitch("Поделиться ссылкой", "Присоединяйся к использованию SurfBoost VPN по моей ссылке и получи бонус! 🎁\nСсылка для подключения: "+refLink),
-		),
-	)
-
 	msg.ParseMode = "Markdown"
 
 	return msg
+}
+
+func (m MessageCreator) GetInlineKeyboardMarkup(reqData string, uid int64) tgbotapi.InlineKeyboardMarkup {
+	switch reqData {
+	case "homePage":
+		return tgbotapi.NewInlineKeyboardMarkup(
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData("⚙️ Подключение к VPN", "vpnConnect"),
+			),
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData("💲 Внесение оплаты за VPN", "paymentMenu"),
+			),
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData("💵 Акция «Приведи друга»", "referral"),
+			),
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData("💸 Пожертвовать", "donate"),
+			),
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData("💬 Помощь", "help"),
+			),
+		)
+	case "paymentMenu":
+		return tgbotapi.NewInlineKeyboardMarkup(
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData("Пополнить банковской картой", "topup_fiat"),
+				tgbotapi.NewInlineKeyboardButtonData("Пополнить криптовалютой", "topup_crypto"),
+			),
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData("Проверить поступления", "updateBalance"),
+			),
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData("Изменить тариф", "changeTariff"),
+			),
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData("Главное меню", "homePage"),
+			),
+		)
+	case "vpnConnect":
+		return tgbotapi.NewInlineKeyboardMarkup(
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData("Добавить ключ", "bindKey"),
+			),
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData("Помощь с подключением", "helpMenu"),
+				tgbotapi.NewInlineKeyboardButtonData("Главное меню", "homePage"),
+			),
+		)
+	case "help":
+		return tgbotapi.NewInlineKeyboardMarkup(
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonURL("iPhone/iPad", "https://surfboost.com/help/ios"),
+			),
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonURL("Android", "https://surfboost.com/help/android"),
+			),
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonURL("Windows", "https://surfboost.com/help/windows"),
+			),
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonURL("Linux", "https://surfboost.com/help/linux"),
+			),
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData("Главное меню", "homePage"),
+			),
+		)
+	case "referral":
+		refLink := m.BotAddress + "?start=ref" + fmt.Sprintf("%d", uid)
+		return tgbotapi.NewInlineKeyboardMarkup(
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData("Главное меню", "homePage"),
+				tgbotapi.NewInlineKeyboardButtonSwitch("Поделиться ссылкой", "Присоединяйся к использованию SurfBoost VPN по моей ссылке и получи бонус! 🎁\nСсылка для подключения: "+refLink),
+			),
+		)
+	}
+
+	return tgbotapi.InlineKeyboardMarkup{}
 }
 
 func (m MessageCreator) SuccessTopup(sum int64, topupSum int64) tgbotapi.MessageConfig {

@@ -18,7 +18,8 @@ type CallbackHandler struct {
 }
 
 type CallbackResult struct {
-	Message tgbotapi.MessageConfig
+	Message     tgbotapi.MessageConfig
+	ReplyMarkup tgbotapi.InlineKeyboardMarkup
 }
 
 func (c CallbackHandler) HandleCallback() CallbackResult {
@@ -29,7 +30,8 @@ func (c CallbackHandler) HandleCallback() CallbackResult {
 	}
 
 	result := CallbackResult{
-		Message: tgbotapi.NewMessage(c.ChatID, "Ошибка разбора команды. Пожалуйста обратитесь в поддержку."),
+		Message:     tgbotapi.NewMessage(c.ChatID, "Ошибка разбора команды. Пожалуйста обратитесь в поддержку."),
+		ReplyMarkup: tgbotapi.InlineKeyboardMarkup{},
 	}
 
 	switch c.Data {
@@ -64,6 +66,9 @@ func (c CallbackHandler) HandleCallback() CallbackResult {
 		sum := c.InternalAccount.TopupAccount(topupSum)
 		result.Message = messenger.SuccessTopup(sum, topupSum)
 	}
+
+	result.ReplyMarkup = messenger.GetInlineKeyboardMarkup(c.Data, c.InternalAccount.GetUserID())
+	result.Message.ReplyMarkup = result.ReplyMarkup
 
 	return result
 }

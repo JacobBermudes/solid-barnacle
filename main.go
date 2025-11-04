@@ -82,7 +82,14 @@ func main() {
 
 			callbackReslut := callbackHandler.HandleCallback()
 
-			bot.Send(callbackReslut.Message)
+			editMsg := tgbotapi.NewEditMessageTextAndMarkup(
+				callback.Message.Chat.ID,
+				callback.Message.MessageID,
+				callbackReslut.Message.Text,
+				callbackReslut.ReplyMarkup,
+			)
+			editMsg.ParseMode = callbackReslut.Message.ParseMode
+			bot.Send(editMsg)
 
 			if strings.HasPrefix(data, "item_") {
 				idStr := strings.TrimPrefix(data, "item_")
@@ -101,9 +108,9 @@ func main() {
 				)
 				edit.ParseMode = "Markdown"
 				bot.Send(edit)
-
-				bot.Request(tgbotapi.NewCallback(callback.ID, ""))
 			}
+
+			bot.Request(tgbotapi.NewCallback(callback.ID, ""))
 		}
 	}
 }
