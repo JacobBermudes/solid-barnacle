@@ -17,11 +17,19 @@ type CallbackHandler struct {
 	InternalAccount account.InternalAccount
 }
 
-func (c CallbackHandler) Handle() tgbotapi.MessageConfig {
+type CallbackResult struct {
+	Message tgbotapi.MessageConfig
+}
+
+func (c CallbackHandler) HandleCallback() CallbackResult {
 
 	messenger := msg.MessageCreator{
 		BotAddress: "https://t.me/mmcvpnbot",
 		ChatID:     c.ChatID,
+	}
+
+	result := CallbackResult{
+		Message: tgbotapi.NewMessage(c.ChatID, "Ошибка разбора команды. Пожалуйста обратитесь в поддержку."),
 	}
 
 	switch c.Data {
@@ -30,34 +38,34 @@ func (c CallbackHandler) Handle() tgbotapi.MessageConfig {
 			UserID: c.InternalAccount.Userid,
 		}.BindRandomKey())
 		msg.ParseMode = "Markdown"
-		return msg
+		result.Message = msg
 	case "homePage":
-		return messenger.HomeMsg(c.InternalAccount.GetUsername(), c.InternalAccount.GetBalance(), c.InternalAccount.GetTariff(), c.InternalAccount.GetAdblocker(), c.InternalAccount.GetActive())
+		result.Message = messenger.HomeMsg(c.InternalAccount.GetUsername(), c.InternalAccount.GetBalance(), c.InternalAccount.GetTariff(), c.InternalAccount.GetAdblocker(), c.InternalAccount.GetActive())
 	case "vpnConnect":
-		return messenger.VpnConnectMsg(c.InternalAccount.GetSharedKey())
+		result.Message = messenger.VpnConnectMsg(c.InternalAccount.GetSharedKey())
 	case "helpMenu":
-		return messenger.HelpMenuMsg()
+		result.Message = messenger.HelpMenuMsg()
 	case "paymentMenu":
-		return messenger.PaymentMenuMsg(c.InternalAccount.GetUsername(), c.InternalAccount.GetBalance())
+		result.Message = messenger.PaymentMenuMsg(c.InternalAccount.GetUsername(), c.InternalAccount.GetBalance())
 	case "updateBalance":
-		return messenger.PaymentMenuMsg(c.InternalAccount.GetUsername(), c.InternalAccount.GetBalance())
+		result.Message = messenger.PaymentMenuMsg(c.InternalAccount.GetUsername(), c.InternalAccount.GetBalance())
 	case "referral":
-		return messenger.RefererMsg(fmt.Sprintf("%d", c.InternalAccount.GetUserID()))
+		result.Message = messenger.RefererMsg(fmt.Sprintf("%d", c.InternalAccount.GetUserID()))
 	case "donate":
-		return messenger.DonateMsg()
+		result.Message = messenger.DonateMsg()
 	case "help":
-		return messenger.HelpMenuMsg()
+		result.Message = messenger.HelpMenuMsg()
 	case "topup_fiat":
 		topupSum := int64(100)
 		sum := c.InternalAccount.TopupAccount(topupSum)
-		return messenger.SuccessTopup(sum, topupSum)
+		result.Message = messenger.SuccessTopup(sum, topupSum)
 	case "topup_crypto":
 		topupSum := int64(100)
 		sum := c.InternalAccount.TopupAccount(topupSum)
-		return messenger.SuccessTopup(sum, topupSum)
+		result.Message = messenger.SuccessTopup(sum, topupSum)
 	}
 
-	return tgbotapi.NewMessage(0, "Ошибка разбора команды. Пожалуйста обратитесь в поддержку.")
+	return result
 }
 
 func (c CallbackHandler) ShowHomePage() bool {

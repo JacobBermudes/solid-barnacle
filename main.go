@@ -55,24 +55,6 @@ func main() {
 		log.Printf("Получено обновление: %+v", update)
 
 		if update.Message != nil && update.Message.IsCommand() {
-			// items := []Item{
-			// 	{1, "Яблоко"}, {2, "Банан"}, {3, "Вишня"},
-			// }
-
-			// var rows [][]tgbotapi.InlineKeyboardButton
-			// for _, item := range items {
-			// 	btn := tgbotapi.NewInlineKeyboardButtonData(
-			// 		item.Name,
-			// 		"item_"+strconv.Itoa(item.ID),
-			// 	)
-			// 	rows = append(rows, tgbotapi.NewInlineKeyboardRow(btn))
-			// }
-
-			// keyboard := tgbotapi.NewInlineKeyboardMarkup(rows...)
-
-			// msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Выберите фрукт:")
-			// msg.ReplyMarkup = keyboard
-			// bot.Send(msg)
 
 			commandHandler := handlers.CommandHandler{
 				ChatID:          update.Message.Chat.ID,
@@ -90,6 +72,17 @@ func main() {
 		if update.CallbackQuery != nil {
 			callback := update.CallbackQuery
 			data := callback.Data
+
+			callbackHandler := handlers.CallbackHandler{
+				Data:            data,
+				ChatID:          callback.Message.Chat.ID,
+				CallbackID:      callback.ID,
+				InternalAccount: account.InternalAccount{Userid: callback.From.ID, Username: callback.From.UserName},
+			}
+
+			callbackReslut := callbackHandler.HandleCallback()
+
+			bot.Send(callbackReslut.Message)
 
 			if strings.HasPrefix(data, "item_") {
 				idStr := strings.TrimPrefix(data, "item_")
