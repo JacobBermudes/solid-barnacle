@@ -6,8 +6,6 @@ import (
 	"mmcvpn/handlers"
 	"net/http"
 	"os"
-	"strconv"
-	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -90,25 +88,6 @@ func main() {
 			)
 			editMsg.ParseMode = callbackReslut.Message.ParseMode
 			bot.Send(editMsg)
-
-			if strings.HasPrefix(data, "item_") {
-				idStr := strings.TrimPrefix(data, "item_")
-				id, _ := strconv.Atoi(idStr)
-
-				fruits := map[int]string{1: "Яблоко", 2: "Банан", 3: "Вишня"}
-				name := fruits[id]
-				if name == "" {
-					name = "Неизвестно"
-				}
-
-				edit := tgbotapi.NewEditMessageText(
-					callback.Message.Chat.ID,
-					callback.Message.MessageID,
-					"Вы выбрали: *"+name+"* (ID: "+strconv.Itoa(id)+")",
-				)
-				edit.ParseMode = "Markdown"
-				bot.Send(edit)
-			}
 
 			bot.Request(tgbotapi.NewCallback(callback.ID, ""))
 		}
