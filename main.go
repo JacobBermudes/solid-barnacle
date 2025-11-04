@@ -2,7 +2,8 @@ package main
 
 import (
 	"log"
-	"mmcvpn/commandHandler"
+	"mmcvpn/account"
+	"mmcvpn/handlers"
 	"net/http"
 	"os"
 	"strconv"
@@ -73,10 +74,10 @@ func main() {
 			// msg.ReplyMarkup = keyboard
 			// bot.Send(msg)
 
-			commandHandler := commandHandler.CommandHandler{
+			commandHandler := handlers.CommandHandler{
 				ChatID:          update.Message.Chat.ID,
 				Command:         update.Message.Command(),
-				InternalAccount: commandHandler.InternalAccount{Userid: update.Message.From.ID, Username: update.Message.From.UserName},
+				InternalAccount: account.InternalAccount{Userid: update.Message.From.ID, Username: update.Message.From.UserName},
 			}
 
 			commandResult := commandHandler.HandleCommand()
