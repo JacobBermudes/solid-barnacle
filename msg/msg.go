@@ -49,19 +49,6 @@ func (m MessageCreator) VpnConnectMsg(currentKeys []string) string {
 	return text
 }
 
-func (m MessageCreator) HomeMsg_del(username string, balance int64, tariff string, adblocker bool, active string) string {
-
-	msg := tgbotapi.NewMessage(m.ChatID, "")
-
-	msg.Text = "Бот управления доступом AbsurfBoost VPN" + "\n\n" +
-		"Пользователь " + username + "!\n\n" +
-		"Твой баланс: " + fmt.Sprintf("%d", balance) + "\n" +
-		"Тариф: " + tariff + "\n" +
-		"Статус доступа к VPN: " + active + "\n"
-
-	return msg.Text
-}
-
 func (m MessageCreator) PaymentMenuMsg(username string, balance int64) string {
 
 	walletData := fmt.Sprintf("Уважаемый %s!\nВаш баланс: %d рублей.\n\n", username, balance)
@@ -72,30 +59,6 @@ func (m MessageCreator) PaymentMenuMsg(username string, balance int64) string {
 		"- Пополнить баланс можно быстро и удобно через *СБП* (Систему быстрых платежей) — просто выберите нужную сумму и следуйте инструкциям.\n" +
 		"- Списание с баланса происходит автоматически согласно вашему тарифу.\n\n" +
 		"🔍 Хотите пополнить баланс или изменить тариф? Используйте кнопки ниже! 👇"
-}
-
-func (m MessageCreator) VpnConnectMsg_del(currentKeys []string) tgbotapi.MessageConfig {
-
-	msg := tgbotapi.NewMessage(m.ChatID, "")
-	if len(currentKeys) == 0 {
-		msg.Text = "Ключи подключения отсутствуют. Пожалуйста добавьте ключ для подключения к VPN."
-	} else {
-		for i, vpnKey := range currentKeys {
-			if vpnKey == "" {
-				msg.Text = "Ключи подключения отсутствуют. Пожалуйста добавьте ключ для подключения к VPN."
-				break
-			}
-			msg.Text = msg.Text + fmt.Sprintf("%d. Ключ подключения: ```%s```\n", i+1, vpnKey)
-		}
-		msg.Text = msg.Text + "\n\nДля быстрой настройки VPN-подключения скопируйте ключ подключения и вставьте в приложение!\n\n"
-	}
-
-	msg.Text = msg.Text + "\nСсылки на приложение:\n	[IPhone/iPad](https://apps.apple.com/ru/app/defaultvpn/id6744725017) \n	[Android](https://play.google.com/store/apps/details?id=org.amnezia.vpn) \n	[Windows](https://github.com/amnezia-vpn/amnezia-client/releases/download/4.8.9.2/AmneziaVPN_4.8.9.2_windows_x64.exe) \n	[Linux](https://github.com/amnezia-vpn/amnezia-client/releases/download/4.8.9.2/AmneziaVPN_4.8.9.2_linux_x64.tar.zip)"
-
-	msg.ParseMode = "Markdown"
-	msg.DisableWebPagePreview = true
-
-	return msg
 }
 
 func (m MessageCreator) HelpMenuMsg() string {
@@ -192,8 +155,8 @@ func (m MessageCreator) GetInlineKeyboardMarkup(reqData string, uid int64) tgbot
 	}
 }
 
-func (m MessageCreator) SuccessTopup(sum int64, topupSum int64) tgbotapi.MessageConfig {
-	return tgbotapi.NewMessage(m.ChatID, fmt.Sprintf("Баланс успешно пополнен на %d рублей. Итого: %d", topupSum, sum))
+func (m MessageCreator) SuccessTopup(sum int64, topupSum int64) string {
+	return fmt.Sprintf("Баланс успешно пополнен на %d рублей. Итого: %d", topupSum, sum)
 }
 
 func (m MessageCreator) DonateMsg() string {

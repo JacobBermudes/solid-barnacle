@@ -67,13 +67,13 @@ func (c CallbackHandler) HandleCallback() CallbackResult {
 	case "topup_fiat":
 		topupSum := int64(100)
 		sum := c.InternalAccount.TopupAccount(topupSum)
-		result.Message = messenger.SuccessTopup(sum, topupSum)
+		result.Message = tgbotapi.NewMessage(c.ChatID, messenger.SuccessTopup(sum, topupSum))
 		result.NewMessage = tgbotapi.NewMessage(c.ChatID, messenger.PaymentMenuMsg(c.InternalAccount.GetUsername(), sum))
 		c.Data = "paymentMenu"
 	case "topup_crypto":
 		topupSum := int64(100)
 		sum := c.InternalAccount.TopupAccount(topupSum)
-		result.Message = messenger.SuccessTopup(sum, topupSum)
+		result.Message = tgbotapi.NewMessage(c.ChatID, messenger.SuccessTopup(sum, topupSum))
 		result.NewMessage = tgbotapi.NewMessage(c.ChatID, messenger.PaymentMenuMsg(c.InternalAccount.GetUsername(), sum))
 		c.Data = "paymentMenu"
 	}

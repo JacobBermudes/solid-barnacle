@@ -33,9 +33,9 @@ func (c CommandHandler) HandleCommand() CommandResult {
 		result.Message = tgbotapi.NewMessage(c.ChatID, "Ожидаем ключа включая VPN://")
 	case "start":
 		c.InternalAccount.AccountInit()
-		result.Message = messenger.HomeMsg(c.InternalAccount.GetUsername(), c.InternalAccount.GetBalance(), c.InternalAccount.GetTariff(), c.InternalAccount.GetAdblocker(), c.InternalAccount.GetActive())
+		result.Message = tgbotapi.NewMessage(c.ChatID, messenger.HomeMsg(c.InternalAccount.GetUsername(), c.InternalAccount.GetBalance(), c.InternalAccount.GetTariff(), c.InternalAccount.GetAdblocker(), c.InternalAccount.GetActive()))
 	case "connect":
-		result.Message = messenger.VpnConnectMsg(c.InternalAccount.GetSharedKey())
+		result.Message = tgbotapi.NewMessage(c.ChatID, messenger.VpnConnectMsg(c.InternalAccount.GetSharedKey()))
 	}
 
 	result.Message.ReplyMarkup = messenger.GetInlineKeyboardMarkup(c.Command, c.InternalAccount.GetUserID())
