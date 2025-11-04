@@ -74,7 +74,7 @@ func main() {
 
 		}
 
-		if keySender == update.Message.From.ID {
+		if update.Message != nil && keySender == update.Message.From.ID {
 			keyStorage := keys.KeyStorage{
 				UserID: keySender,
 				Keys:   []string{update.Message.Text},
