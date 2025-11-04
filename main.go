@@ -112,7 +112,9 @@ func main() {
 			bot.Send(editMsg)
 
 			if callbackReslut.NewMessage.Text != "" {
-				bot.Send(callbackReslut.NewMessage)
+				newMsg := callbackReslut.NewMessage
+				newMsg.ReplyMarkup = callbackReslut.ReplyMarkup
+				bot.Send(newMsg)
 			}
 
 			bot.Request(tgbotapi.NewCallback(callback.ID, ""))
