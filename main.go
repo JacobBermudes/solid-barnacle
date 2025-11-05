@@ -41,7 +41,14 @@ func main() {
 
 	go func() {
 		log.Println("Go back listening :8080 (HTTP)")
-		if err := http.ListenAndServe(":8080", nil); err != nil {
+
+		r := http.NewServeMux()
+		r.HandleFunc("/api", func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("Speedball Bot is running"))
+		})
+
+		if err := http.ListenAndServe(":8080", r); err != nil {
 			log.Fatal("HTTP Server FAULT:", err)
 		}
 	}()
