@@ -43,7 +43,7 @@ func main() {
 		log.Println("Go back listening :8080 (HTTP)")
 
 		r := http.NewServeMux()
-		r.HandleFunc("/webapp/api", func(w http.ResponseWriter, r *http.Request) {
+		r.HandleFunc("/webhook/api", func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte("Speedball Bot is running"))
 		})
