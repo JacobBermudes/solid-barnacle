@@ -11,6 +11,19 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
+type Api_req struct {
+	Uid      int64  `json:"uid"`
+	Username string `json:"username"`
+}
+
+type Api_resp struct {
+	Username   string   `json:"username"`
+	Balance    int64    `json:"balance"`
+	Tariff     string   `json:"tariff"`
+	SharedKeys []string `json:"sharedkey"`
+	Active     string   `json:"active"`
+}
+
 func main() {
 
 	token := os.Getenv("TELEGRAM_BOT_TOKEN")
@@ -42,13 +55,38 @@ func main() {
 	go func() {
 		log.Println("Go back listening :8080 (HTTP)")
 
-		r := http.NewServeMux()
-		r.HandleFunc("/webhook/api", func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("Speedball Bot is running"))
-		})
+		// r := http.NewServeMux()
+		// r.HandleFunc("/webhook/api/init", func(w http.ResponseWriter, r *http.Request) {
 
-		if err := http.ListenAndServe(":8080", r); err != nil {
+		// 	var req Api_req
+		// 	err := json.NewDecoder(r.Body).Decode(&req)
+		// 	if err != nil {
+		// 		http.Error(w, "Error parsing BODY "+err.Error(), http.StatusBadRequest)
+		// 		return
+		// 	}
+
+		// 	vpnacc := account.InternalAccount{
+		// 		Userid:   req.Uid,
+		// 		Username: req.Username,
+		// 	}
+
+		// 	vpnacc.AccountInit()
+
+		// 	resp := Api_resp{
+		// 		Username:   vpnacc.GetUsername(),
+		// 		Balance:    vpnacc.GetBalance(),
+		// 		Tariff:     vpnacc.GetTariff(),
+		// 		SharedKeys: vpnacc.GetSharedKey(),
+		// 		Active:     vpnacc.GetActive(),
+		// 	}
+
+		// 	w.WriteHeader(http.StatusOK)
+		// 	w.Header().Set("Content-Type", "application/json")
+
+		// 	json.NewEncoder(w).Encode(resp)
+		// })
+
+		if err := http.ListenAndServe(":8080", nil); err != nil {
 			log.Fatal("HTTP Server FAULT:", err)
 		}
 	}()
