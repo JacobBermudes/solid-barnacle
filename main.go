@@ -58,7 +58,13 @@ func main() {
 		log.Println("Go back listening :8080 (HTTP)")
 
 		r := http.NewServeMux()
-		r.HandleFunc("/webapp/api/init", func(w http.ResponseWriter, r *http.Request) {
+		r.HandleFunc("/api", func(w http.ResponseWriter, r *http.Request) {
+
+			if r.Method != "POST" {
+				w.WriteHeader(http.StatusOK)
+				w.Write([]byte("API supports only POST method!"))
+				return
+			}
 
 			var req Api_req
 			err := json.NewDecoder(r.Body).Decode(&req)
@@ -88,7 +94,7 @@ func main() {
 			json.NewEncoder(w).Encode(resp)
 		})
 
-		if err := http.ListenAndServe(":8080", nil); err != nil {
+		if err := http.ListenAndServe(":8080", r); err != nil {
 			log.Fatal("HTTP Server FAULT:", err)
 		}
 	}()
