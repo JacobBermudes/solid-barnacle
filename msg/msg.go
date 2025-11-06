@@ -70,6 +70,18 @@ func (m MessageCreator) RefererMsg(userid string) string {
 	return "💵Акция «Приведи друга»💵\n\nПриглашайте друзей и получайте бонусы на баланс!\n\nЗа каждого приглашенного друга вы и ваш друг получит 10 рублей на баланс для тестирования сервиса.\n\nДля участия в акции просто поделитесь своей уникальной ссылкой приглашения:\n\n`" + refLink + "`\n\nЧем больше друзей вы пригласите, тем больше бонусов получите! Акция действует без ограничений по количеству приглашенных друзей.\n\nСпасибо, что выбираете наш VPN-сервис! Вместе мы сделаем интернет безопаснее и доступнее для всех."
 }
 
+func (m MessageCreator) SuccessTopup(sum int64, topupSum int64) string {
+	return fmt.Sprintf("Баланс успешно пополнен на %d рублей. Итого: %d", topupSum, sum)
+}
+
+func (m MessageCreator) DonateMsg() string {
+	return "Если вам нравится наш VPN-сервис и вы хотите поддержать его развитие финансово, поддержка принимается по СБП на ТБанк :)"
+}
+
+func (m MessageCreator) ThanksMsg() tgbotapi.MessageConfig {
+	return tgbotapi.NewMessage(m.ChatID, "Спасибо за регистрацию по реферальной ссылке!")
+}
+
 func (m MessageCreator) GetInlineKeyboardMarkup(reqData string, uid int64) tgbotapi.InlineKeyboardMarkup {
 	switch reqData {
 	case "homePage", "start":
@@ -153,16 +165,4 @@ func (m MessageCreator) GetInlineKeyboardMarkup(reqData string, uid int64) tgbot
 	return tgbotapi.InlineKeyboardMarkup{
 		InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{},
 	}
-}
-
-func (m MessageCreator) SuccessTopup(sum int64, topupSum int64) string {
-	return fmt.Sprintf("Баланс успешно пополнен на %d рублей. Итого: %d", topupSum, sum)
-}
-
-func (m MessageCreator) DonateMsg() string {
-	return "Если вам нравится наш VPN-сервис и вы хотите поддержать его развитие финансово, поддержка принимается по СБП на ТБанк :)"
-}
-
-func (m MessageCreator) ThanksMsg() tgbotapi.MessageConfig {
-	return tgbotapi.NewMessage(m.ChatID, "Спасибо за регистрацию по реферальной ссылке!")
 }

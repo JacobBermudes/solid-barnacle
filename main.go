@@ -1,12 +1,14 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"mmcvpn/account"
 	"mmcvpn/handlers"
-	"mmcvpn/keys"
 	"net/http"
 	"os"
+	"strconv"
+	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -55,39 +57,60 @@ func main() {
 	go func() {
 		log.Println("Go back listening :8080 (HTTP)")
 
-		// r := http.NewServeMux()
-		// r.HandleFunc("/webhook/api/init", func(w http.ResponseWriter, r *http.Request) {
+		r := http.NewServeMux()
+		r.HandleFunc("/webhook/api/init", func(w http.ResponseWriter, r *http.Request) {
 
-		// 	var req Api_req
-		// 	err := json.NewDecoder(r.Body).Decode(&req)
-		// 	if err != nil {
-		// 		http.Error(w, "Error parsing BODY "+err.Error(), http.StatusBadRequest)
-		// 		return
-		// 	}
+			var req Api_req
+			err := json.NewDecoder(r.Body).Decode(&req)
+			if err != nil {
+				http.Error(w, "Error parsing BODY "+err.Error(), http.StatusBadRequest)
+				return
+			}
 
-		// 	vpnacc := account.InternalAccount{
-		// 		Userid:   req.Uid,
-		// 		Username: req.Username,
-		// 	}
+			vpnacc := account.InternalAccount{
+				Userid:   req.Uid,
+				Username: req.Username,
+			}
 
-		// 	vpnacc.AccountInit()
+			vpnacc.AccountInit()
 
-		// 	resp := Api_resp{
-		// 		Username:   vpnacc.GetUsername(),
-		// 		Balance:    vpnacc.GetBalance(),
-		// 		Tariff:     vpnacc.GetTariff(),
-		// 		SharedKeys: vpnacc.GetSharedKey(),
-		// 		Active:     vpnacc.GetActive(),
-		// 	}
+			resp := Api_resp{
+				Username:   vpnacc.GetUsername(),
+				Balance:    vpnacc.GetBalance(),
+				Tariff:     vpnacc.GetTariff(),
+				SharedKeys: vpnacc.GetSharedKey(),
+				Active:     vpnacc.GetActive(),
+			}
 
-		// 	w.WriteHeader(http.StatusOK)
-		// 	w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Header().Set("Content-Type", "application/json")
 
-		// 	json.NewEncoder(w).Encode(resp)
-		// })
+			json.NewEncoder(w).Encode(resp)
+		})
 
 		if err := http.ListenAndServe(":8080", nil); err != nil {
 			log.Fatal("HTTP Server FAULT:", err)
+		}
+	}()
+
+	go func() {
+		ticker := time.NewTicker(30 * 24 * time.Hour)
+		defer ticker.Stop()
+
+		for range ticker.C {
+			log.Println("Ежедневное списание баланса")
+
+			allUsers := account.DBAccount{}.GetAccounts("*")
+
+			for _, tgID := range allUsers {
+
+				numericId, _ := strconv.ParseInt(tgID, 10, 64)
+				accountToCharge := account.DBAccount{
+					UserID: numericId,
+				}
+				newBalance := accountToCharge.DecrBalance(75)
+				log.Println("Списано 75 рублей с пользователя: ", numericId, ". Новый баланс: ", newBalance)
+			}
 		}
 	}()
 
@@ -116,7 +139,7 @@ func main() {
 		}
 
 		if update.Message != nil && keySender == update.Message.From.ID {
-			keyStorage := keys.KeyStorage{
+			keyStorage := account.KeyStorage{
 				UserID: keySender,
 				Keys:   []string{update.Message.Text},
 			}

@@ -2,8 +2,6 @@ package account
 
 import (
 	"fmt"
-	"mmcvpn/dbaccount"
-	"mmcvpn/keys"
 	"time"
 )
 
@@ -25,12 +23,12 @@ type ReferralBonus struct {
 
 func (r ReferralBonus) ApplyBonus() string {
 
-	DatabaseAccount := dbaccount.DBAccount{
+	DatabaseAccount := DBAccount{
 		UserID: r.CallerID,
 	}
 	DatabaseAccount.IncrBalance(r.Sum)
 
-	DatabaseAccount = dbaccount.DBAccount{
+	DatabaseAccount = DBAccount{
 		UserID: r.FriendID,
 	}
 	DatabaseAccount.IncrBalance(r.Sum)
@@ -40,7 +38,7 @@ func (r ReferralBonus) ApplyBonus() string {
 
 func (r *InternalAccount) AccountInit() *InternalAccount {
 
-	DatabaseAccount := dbaccount.DBAccount{
+	DatabaseAccount := DBAccount{
 		UserID: r.Userid,
 	}
 	DatabaseAccount = DatabaseAccount.GetAccount()
@@ -61,7 +59,7 @@ func (r *InternalAccount) AccountInit() *InternalAccount {
 		r.Active = DatabaseAccount.Active
 		r.Adblocker = false
 	} else {
-		keysGetter := keys.KeyStorage{
+		keysGetter := KeyStorage{
 			UserID: DatabaseAccount.UserID,
 		}
 
@@ -85,7 +83,7 @@ func (r *InternalAccount) GetUsername() string {
 }
 
 func (r *InternalAccount) GetBalance() int64 {
-	DatabaseAccount := dbaccount.DBAccount{
+	DatabaseAccount := DBAccount{
 		UserID: r.Userid,
 	}
 	r.Balance = DatabaseAccount.GetBalance()
@@ -102,7 +100,7 @@ func (r *InternalAccount) GetAdblocker() bool {
 }
 
 func (r *InternalAccount) GetSharedKey() []string {
-	keysGetter := keys.KeyStorage{
+	keysGetter := KeyStorage{
 		UserID: r.Userid,
 	}
 
@@ -121,7 +119,7 @@ func (r *InternalAccount) GetActive() string {
 }
 
 func (r *InternalAccount) AccountExist() bool {
-	DatabaseAccount := dbaccount.DBAccount{
+	DatabaseAccount := DBAccount{
 		UserID: r.Userid,
 	}
 	DatabaseAccount = DatabaseAccount.GetAccount()
@@ -130,7 +128,7 @@ func (r *InternalAccount) AccountExist() bool {
 }
 
 func (r *InternalAccount) RefferalBonus(userid int64, sum int64) int64 {
-	DatabaseAccount := dbaccount.DBAccount{
+	DatabaseAccount := DBAccount{
 		UserID: userid,
 	}
 	result := DatabaseAccount.IncrBalance(sum)
@@ -139,7 +137,7 @@ func (r *InternalAccount) RefferalBonus(userid int64, sum int64) int64 {
 }
 
 func (r *InternalAccount) TopupAccount(sum int64) int64 {
-	DatabaseAccount := dbaccount.DBAccount{
+	DatabaseAccount := DBAccount{
 		UserID: r.Userid,
 	}
 	result := DatabaseAccount.IncrBalance(sum)

@@ -3,7 +3,6 @@ package handlers
 import (
 	"fmt"
 	"mmcvpn/account"
-	"mmcvpn/keys"
 	"mmcvpn/msg"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -37,7 +36,7 @@ func (c CallbackHandler) HandleCallback() CallbackResult {
 
 	switch c.Data {
 	case "bindKey":
-		BindedKey := keys.KeyStorage{
+		BindedKey := account.KeyStorage{
 			UserID: c.InternalAccount.Userid,
 		}.BindRandomKey()
 		msg := tgbotapi.NewMessage(c.ChatID, BindedKey)

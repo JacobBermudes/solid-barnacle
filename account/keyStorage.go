@@ -1,15 +1,10 @@
-package keys
+package account
 
 import (
-	"context"
 	"fmt"
-	"os"
 
 	"github.com/go-redis/redis/v8"
 )
-
-var rdbpass = os.Getenv("REDIS_PASS")
-var ctx = context.Background()
 
 var db = redis.NewClient(&redis.Options{
 	Addr:     "localhost:6379",

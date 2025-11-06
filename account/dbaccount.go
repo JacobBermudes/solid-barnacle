@@ -1,4 +1,4 @@
-package dbaccount
+package account
 
 import (
 	"context"
