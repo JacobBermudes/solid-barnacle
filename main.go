@@ -94,8 +94,12 @@ func main() {
 			json.NewEncoder(w).Encode(resp)
 		})
 
-		if err := http.ListenAndServe(":8080", r); err != nil {
-			log.Fatal("HTTP Server FAULT:", err)
+		if err := http.ListenAndServe("127.0.0.1:8008", r); err != nil {
+			log.Fatal("HTTP API-Server FAULT:", err)
+		}
+
+		if err := http.ListenAndServe(":8080", nil); err != nil {
+			log.Fatal("HTTP WebHook-Server FAULT:", err)
 		}
 	}()
 
