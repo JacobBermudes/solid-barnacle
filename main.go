@@ -58,7 +58,7 @@ func main() {
 		log.Println("Go back listening :8080 (HTTP)")
 
 		r := http.NewServeMux()
-		r.HandleFunc("/webhook/api/init", func(w http.ResponseWriter, r *http.Request) {
+		r.HandleFunc("/webapp/api/init", func(w http.ResponseWriter, r *http.Request) {
 
 			var req Api_req
 			err := json.NewDecoder(r.Body).Decode(&req)
