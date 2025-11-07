@@ -14,7 +14,7 @@ import (
 )
 
 type Api_req struct {
-	Uid      int64  `json:"uid"`
+	Id       int64  `json:"id"`
 	Username string `json:"username"`
 }
 
@@ -81,7 +81,7 @@ func main() {
 			}
 
 			vpnacc := account.InternalAccount{
-				Userid:   req.Uid,
+				Userid:   req.Id,
 				Username: req.Username,
 			}
 
@@ -103,6 +103,9 @@ func main() {
 
 		log.Println("Go API listening :8000 (HTTP)")
 
+		// if err := http.ListenAndServe("127.0.0.1:8000", r); err != nil {
+		// 	log.Fatal("HTTP WebHook-Server FAULT:", err)
+		// }
 		if err := http.ListenAndServe(":8000", r); err != nil {
 			log.Fatal("HTTP WebHook-Server FAULT:", err)
 		}

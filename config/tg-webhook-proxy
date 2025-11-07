@@ -21,7 +21,6 @@ server {
         proxy_read_timeout 300s;
     }
 
-
     access_log /var/log/nginx/tg_webhook_access.log;
     error_log /var/log/nginx/tg_webhook_error.log;
 }
