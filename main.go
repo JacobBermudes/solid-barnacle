@@ -103,7 +103,7 @@ func main() {
 
 		log.Println("Go API listening :8000 (HTTP)")
 
-		if err := http.ListenAndServe(":8000", nil); err != nil {
+		if err := http.ListenAndServe(":8000", r); err != nil {
 			log.Fatal("HTTP WebHook-Server FAULT:", err)
 		}
 	}()
