@@ -57,6 +57,13 @@ func main() {
 	go func() {
 		log.Println("Go back listening :8080 (HTTP)")
 
+		if err := http.ListenAndServe(":8080", nil); err != nil {
+			log.Fatal("HTTP WebHook-Server FAULT:", err)
+		}
+	}()
+
+	go func() {
+
 		r := http.NewServeMux()
 		r.HandleFunc("/api", func(w http.ResponseWriter, r *http.Request) {
 
@@ -94,7 +101,9 @@ func main() {
 			json.NewEncoder(w).Encode(resp)
 		})
 
-		if err := http.ListenAndServe(":8080", nil); err != nil {
+		log.Println("Go API listening :8000 (HTTP)")
+
+		if err := http.ListenAndServe(":8000", nil); err != nil {
 			log.Fatal("HTTP WebHook-Server FAULT:", err)
 		}
 	}()
