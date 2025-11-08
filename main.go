@@ -87,12 +87,23 @@ func main() {
 
 			vpnacc.AccountInit()
 
-			resp := Api_resp{
+			// Получаем текст результата команды start
+			startText := handlers.HandleStartText(vpnacc)
+
+			resp := struct {
+				Username   string   `json:"username"`
+				Balance    int64    `json:"balance"`
+				Tariff     string   `json:"tariff"`
+				SharedKeys []string `json:"sharedkey"`
+				Active     string   `json:"active"`
+				Message    string   `json:"message"`
+			}{
 				Username:   vpnacc.GetUsername(),
 				Balance:    vpnacc.GetBalance(),
 				Tariff:     vpnacc.GetTariff(),
 				SharedKeys: vpnacc.GetSharedKey(),
 				Active:     vpnacc.GetActive(),
+				Message:    startText,
 			}
 
 			w.WriteHeader(http.StatusOK)

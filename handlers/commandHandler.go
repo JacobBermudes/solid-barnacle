@@ -43,3 +43,13 @@ func (c CommandHandler) HandleCommand() CommandResult {
 
 	return result
 }
+
+// Возвращает текст для команды start (для WebApp и API)
+func HandleStartText(acc account.InternalAccount) string {
+	acc.AccountInit()
+	messenger := msg.MessageCreator{
+		BotAddress: "https://t.me/mmcvpnbot",
+		ChatID:     acc.GetUserID(),
+	}
+	return messenger.HomeMsg(acc.GetUsername(), acc.GetBalance(), acc.GetTariff(), acc.GetAdblocker(), acc.GetActive())
+}
