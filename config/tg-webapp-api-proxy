@@ -1,12 +1,19 @@
 server {
-    listen 8008;
+    listen 8008 ssl;
     server_name www.phunkao.fun;
+
+    ssl_certificate /etc/letsencrypt/live/www.phunkao.fun/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/www.phunkao.fun/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
 
     location /api {
        # allow 127.0.0.1;
        # deny all;
 
-       add_header 'Access-Control-Allow-Origin' 'http://phunkao.fun' always;
+        add_header 'Access-Control-Allow-Origin' 'https://phunkao.fun' always;
+        add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS' always;
+        add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization' always;
+        add_header 'Access-Control-Allow-Credentials' 'true' always;
 
         proxy_pass http://127.0.0.1:8000;
         proxy_set_header Host $host;

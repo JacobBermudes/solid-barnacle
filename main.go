@@ -68,7 +68,7 @@ func main() {
 		r.HandleFunc("/api", func(w http.ResponseWriter, r *http.Request) {
 
 			if r.Method != "POST" {
-				w.WriteHeader(http.StatusOK)
+				w.WriteHeader(http.StatusMethodNotAllowed)
 				w.Write([]byte("API supports only POST method!"))
 				return
 			}
