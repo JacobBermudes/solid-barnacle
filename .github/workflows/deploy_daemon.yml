@@ -2,7 +2,7 @@ name: Deploy SpeedBall Daemon
 
 on:
   push:
-    branches: ["main"]
+    branches: ["DontStart"]
 
 jobs:
   build-and-deploy:

@@ -1,4 +1,4 @@
-package account
+package core
 
 import (
 	"context"
@@ -8,6 +8,14 @@ import (
 
 	"github.com/go-redis/redis/v8"
 )
+
+type DB_user struct {
+	UserID   int64  `json:"userid"`
+	Username string `json:"username"`
+	Tariff   string `json:"tariff"`
+	Active   bool   `json:"active"`
+	Created  string `json:"created"`
+}
 
 var rdbpass = os.Getenv("REDIS_PASS")
 var ctx = context.Background()
@@ -24,16 +32,7 @@ var balance_db = redis.NewClient(&redis.Options{
 	Password: rdbpass,
 })
 
-type DBAccount struct {
-	UserID   int64  `json:"userid"`
-	Username string `json:"username"`
-	Tariff   string `json:"tariff"`
-	Active   bool   `json:"active"`
-	Created  string `json:"created"`
-}
-
-func (d DBAccount) GetAccount() DBAccount {
-
+func (d DB_user) GetAccount() DB_user {
 	accountDataQuery := acc_db.Get(ctx, fmt.Sprintf("%d", d.UserID))
 
 	if accountDataQuery != nil {
@@ -44,16 +43,12 @@ func (d DBAccount) GetAccount() DBAccount {
 	return d
 }
 
-func (d DBAccount) SetAccount() DBAccount {
+func (d DB_user) SetAccount(setString string) DB_user {
 
-	accountData, _ := json.Marshal(d)
-
-	acc_db.Set(ctx, fmt.Sprintf("%d", d.UserID), string(accountData), 0)
-
+	acc_db.Set(ctx, fmt.Sprintf("%d", d.UserID), setString, 0)
 	return d
 }
 
-func (d DBAccount) GetAccounts(filter string) []string {
-	accointIds, _ := acc_db.Keys(ctx, filter).Result()
-	return accointIds
+func (d DB_user) TopupBalance(sum int64) int64 {
+	return balance_db.IncrBy(ctx, fmt.Sprintf("%d", d.UserID), sum).Val()
 }
