@@ -11,7 +11,15 @@ type MessageCreator struct {
 	ChatID     int64
 }
 
-func (m MessageCreator) HomeMsg(username string, balance int64, tariff string, adblocker bool, active string) string {
+func (m MessageCreator) HomeMsg_del(username string, balance int64, tariff string, adblocker bool, active string) string {
+	return "Бот управления доступом AbsurfBoost VPN" + "\n\n" +
+		"Пользователь " + username + "!\n\n" +
+		"Твой баланс: " + fmt.Sprintf("%d", balance) + "\n" +
+		"Тариф: " + tariff + "\n" +
+		"Статус доступа к VPN: " + active + "\n"
+}
+
+func HomeMsg(username string, balance int64, tariff string, active string) string {
 	return "Бот управления доступом AbsurfBoost VPN" + "\n\n" +
 		"Пользователь " + username + "!\n\n" +
 		"Твой баланс: " + fmt.Sprintf("%d", balance) + "\n" +
@@ -78,8 +86,8 @@ func (m MessageCreator) DonateMsg() string {
 	return "Если вам нравится наш VPN-сервис и вы хотите поддержать его развитие финансово, поддержка принимается по СБП на ТБанк :)"
 }
 
-func (m MessageCreator) ThanksMsg() tgbotapi.MessageConfig {
-	return tgbotapi.NewMessage(m.ChatID, "Спасибо за регистрацию по реферальной ссылке!")
+func (m MessageCreator) ThanksMsg() string {
+	return "Спасибо за регистрацию по реферальной ссылке!"
 }
 
 func (m MessageCreator) GetInlineKeyboardMarkup(reqData string, uid int64) tgbotapi.InlineKeyboardMarkup {

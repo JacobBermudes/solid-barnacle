@@ -1,55 +1,35 @@
 package handlers
 
 import (
-	"mmcvpn/account"
-	"mmcvpn/msg"
+	core "speed-ball/internal/core/data"
+	"speed-ball/internal/msg"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 type CommandHandler struct {
-	ChatID          int64
-	Command         string
-	InternalAccount account.InternalAccount
+	Data string
+	User core.User
 }
 
 type CommandResult struct {
 	Message tgbotapi.MessageConfig
 }
 
-func (c CommandHandler) HandleCommand() CommandResult {
+func (c CommandHandler) HandleCommand() string {
 
-	messenger := msg.MessageCreator{
-		BotAddress: "https://t.me/mmcvpnbot",
-		ChatID:     c.ChatID,
-	}
-
-	result := CommandResult{
-		Message: tgbotapi.NewMessage(c.ChatID, "Неизвестная команда.Обратитесь в поддержку"),
-	}
-
-	switch c.Command {
+	switch c.Data {
 	case "addkey":
-		result.Message = tgbotapi.NewMessage(c.ChatID, "Ожидаем ключа включая VPN://")
+		return "Ожидаем ключа включая VPN://"
 	case "start":
-		c.InternalAccount.AccountInit()
-		result.Message = tgbotapi.NewMessage(c.ChatID, messenger.HomeMsg(c.InternalAccount.GetUsername(), c.InternalAccount.GetBalance(), c.InternalAccount.GetTariff(), c.InternalAccount.GetAdblocker(), c.InternalAccount.GetActive()))
-	case "connect":
-		result.Message = tgbotapi.NewMessage(c.ChatID, messenger.VpnConnectMsg(c.InternalAccount.GetSharedKey()))
-		result.Message.ParseMode = "Markdown"
+
+		User := core.User{
+			UserID: c.User.UserID,
+		}
+		UserData := User.GetAccount()
+
+		return msg.HomeMsg(UserData.Username, UserData.Balance, UserData.Tariff, "Активен")
+	default:
+		return "Неизвестная команда.Обратитесь в поддержку"
 	}
-
-	result.Message.ReplyMarkup = messenger.GetInlineKeyboardMarkup(c.Command, c.InternalAccount.GetUserID())
-
-	return result
-}
-
-// Возвращает текст для команды start (для WebApp и API)
-func HandleStartText(acc account.InternalAccount) string {
-	acc.AccountInit()
-	messenger := msg.MessageCreator{
-		BotAddress: "https://t.me/mmcvpnbot",
-		ChatID:     acc.GetUserID(),
-	}
-	return messenger.HomeMsg(acc.GetUsername(), acc.GetBalance(), acc.GetTariff(), acc.GetAdblocker(), acc.GetActive())
 }

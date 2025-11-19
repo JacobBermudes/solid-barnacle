@@ -2,18 +2,14 @@ package handlers
 
 import (
 	"fmt"
-	"mmcvpn/account"
-	"mmcvpn/msg"
+	core "speed-ball/internal/core/data"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 type CallbackHandler struct {
-	Data            string
-	ChatID          int64
-	CallbackID      string
-	ShowHome        bool
-	InternalAccount account.InternalAccount
+	Data string
+	User core.User
 }
 
 type CallbackResult struct {
@@ -22,22 +18,12 @@ type CallbackResult struct {
 	NewMessage  tgbotapi.MessageConfig
 }
 
-func (c CallbackHandler) HandleCallback() CallbackResult {
-
-	messenger := msg.MessageCreator{
-		BotAddress: "https://t.me/mmcvpnbot",
-		ChatID:     c.ChatID,
-	}
-
-	result := CallbackResult{
-		Message:     tgbotapi.NewMessage(c.ChatID, "Ошибка разбора команды. Пожалуйста обратитесь в поддержку."),
-		ReplyMarkup: tgbotapi.InlineKeyboardMarkup{},
-	}
+func (c CallbackHandler) HandleCallback() string {
 
 	switch c.Data {
 	case "bindKey":
-		BindedKey := account.KeyStorage{
-			UserID: c.InternalAccount.Userid,
+		BindedKey := core.User{
+			UserID: c.User.UserID,
 		}.BindRandomKey()
 		msg := tgbotapi.NewMessage(c.ChatID, BindedKey)
 		msg.ParseMode = "Markdown"

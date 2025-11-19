@@ -6,8 +6,6 @@ import (
 	"os"
 	"speed-ball/account"
 	"speed-ball/handlers"
-	"strconv"
-	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -45,27 +43,6 @@ func main() {
 
 		if err := http.ListenAndServe(":8080", nil); err != nil {
 			log.Fatal("HTTP WebHook-Server FAULT:", err)
-		}
-	}()
-
-	go func() {
-		ticker := time.NewTicker(30 * 24 * time.Hour)
-		defer ticker.Stop()
-
-		for range ticker.C {
-			log.Println("Ежедневное списание баланса")
-
-			allUsers := account.DBAccount{}.GetAccounts("*")
-
-			for _, tgID := range allUsers {
-
-				numericId, _ := strconv.ParseInt(tgID, 10, 64)
-				accountToCharge := account.DBAccount{
-					UserID: numericId,
-				}
-				newBalance := accountToCharge.DecrBalance(75)
-				log.Println("Списано 75 рублей с пользователя: ", numericId, ". Новый баланс: ", newBalance)
-			}
 		}
 	}()
 

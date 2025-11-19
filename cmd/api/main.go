@@ -13,6 +13,7 @@ type Api_req struct {
 	Id       int64  `json:"id"`
 	Username string `json:"username"`
 	Method   string `json:"method"`
+	Type     string `json:"type"`
 	Props    string `json:"props"`
 }
 
@@ -57,36 +58,33 @@ func main() {
 			}
 			inviteMaker.RefBonus(100)
 
-		} else {
-			http.Error(w, "Unknown method", http.StatusBadRequest)
-			return
+			User = User.SetAccount()
 		}
 
-		vpnacc.AccountInit()
+		var respString string
 
-		// Получаем текст результата команды start
-		startText := handlers.HandleStartText(vpnacc)
+		if req.Type == "cb" {
 
-		resp := struct {
-			Username   string   `json:"username"`
-			Balance    int64    `json:"balance"`
-			Tariff     string   `json:"tariff"`
-			SharedKeys []string `json:"sharedkey"`
-			Active     string   `json:"active"`
-			Message    string   `json:"message"`
-		}{
-			Username:   vpnacc.GetUsername(),
-			Balance:    vpnacc.GetBalance(),
-			Tariff:     vpnacc.GetTariff(),
-			SharedKeys: vpnacc.GetSharedKey(),
-			Active:     vpnacc.GetActive(),
-			Message:    startText,
+			cbData := handlers.CallbackHandler{
+				Data: req.Method,
+				User: User,
+			}
+
+			respString = cbData.HandleCallback()
+		} else if req.Type == "cmd" {
+
+			cmdData := handlers.CommandHandler{
+				Data: req.Method,
+				User: User,
+			}
+
+			respString = cmdData.HandleCommand()
 		}
 
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
 
-		json.NewEncoder(w).Encode(resp)
+		json.NewEncoder(w).Encode(respString)
 	})
 
 	log.Println("Go API listening :8000 (HTTP)")
@@ -95,6 +93,6 @@ func main() {
 	// 	log.Fatal("HTTP WebHook-Server FAULT:", err)
 	// }
 	if err := http.ListenAndServe(":8000", r); err != nil {
-		log.Fatal("HTTP WebHook-Server FAULT:", err)
+		log.Fatal("HTTP Web-Server for API FAULT:", err)
 	}
 }
