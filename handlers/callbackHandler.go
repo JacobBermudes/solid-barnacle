@@ -20,7 +20,7 @@ func (c CallbackHandler) HandleCallback() []string {
 		result = append(result, c.User.BindRandomKey(), msg.VpnConnectMsg(c.User.GetBindedKeys()))
 	case "homePage":
 		UserData := c.User.GetAccount()
-		result = []string{msg.HomeMsg(UserData.Username, UserData.Balance, UserData.Tariff, UserData.Active)}
+		result = []string{msg.HomeMsg(UserData.Username, UserData.Balance, UserData.Tariff, "Активен")}
 	case "vpnConnect":
 		result = []string{msg.VpnConnectMsg(c.User.GetBindedKeys())}
 	case "helpMenu":

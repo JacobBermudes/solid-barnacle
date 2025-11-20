@@ -114,7 +114,6 @@ func main() {
 			for i, text := range callbackResult {
 				if i > 0 {
 					newMsg := tgbotapi.NewMessage(callback.Message.Chat.ID, text)
-					newMsg.ReplyMarkup = msg.GetInlineKeyboardMarkup(data, User.UserID)
 					newMsg.ParseMode = "Markdown"
 					newMsg.DisableWebPagePreview = true
 					bot.Send(newMsg)
