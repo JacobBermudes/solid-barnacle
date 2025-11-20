@@ -24,6 +24,7 @@ jobs:
           export GOOS=linux 
           export GOARCH=amd64
           go build -o api ./cmd/api && go build -o daemon ./cmd/bot
+          echo "Build completed."
 
       - name: Copy API binary to VPS
         uses: appleboy/scp-action@v0.1.7
@@ -34,7 +35,7 @@ jobs:
           source: "api"
           target: "/etc/speedball/speedball_api"
 
-      - name: Copy API binary to VPS
+      - name: Copy daemon binary to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VPS_HOST }}
