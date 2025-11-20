@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
-
-	"github.com/go-redis/redis/v8"
 )
 
 type User struct {
@@ -63,7 +61,7 @@ func (d User) RefBonus(sum int64) int64 {
 		UserID: d.UserID,
 	}
 
-	return UserWallet.TopupBalance(10)
+	return UserWallet.TopupBalance(sum)
 }
 
 func (d User) TopupBalance(sum int64) int64 {
@@ -72,7 +70,7 @@ func (d User) TopupBalance(sum int64) int64 {
 		UserID: d.UserID,
 	}
 
-	return UserWallet.TopupBalance(10)
+	return UserWallet.TopupBalance(sum)
 }
 
 func (d User) BindRandomKey() string {
@@ -107,34 +105,4 @@ func (d User) GetBindedKeys() []string {
 
 func (d User) AddKey(key string) string {
 	return "Ключ успешно добавлен в общий пул доступных ключей для раздачи пользователям! На данный момент в пуле доступно " + fmt.Sprintf("%d", GetFreeKeys()) + " ключей."
-}
-
-//OLD SHIT
-
-func (d User) GetBalance() int64 {
-
-	var balanceNumeric int64 = 0
-	balanceQuery, err := balance_db.Get(ctx, fmt.Sprintf("%d", d.UserID)).Int64()
-
-	if err != redis.Nil {
-		balanceNumeric = balanceQuery
-	}
-
-	return balanceNumeric
-}
-
-func (d User) IncrBalance(sum int64) int64 {
-	return balance_db.IncrBy(ctx, fmt.Sprintf("%d", d.UserID), sum).Val()
-}
-
-func (d User) DecrBalance(sum int64) int64 {
-
-	currentBalance := d.GetBalance()
-
-	if currentBalance < sum {
-		return 0
-	}
-
-	balanceNumeric := balance_db.DecrBy(ctx, fmt.Sprintf("%d", d.UserID), sum).Val()
-	return balanceNumeric
 }

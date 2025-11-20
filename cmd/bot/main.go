@@ -59,8 +59,9 @@ func main() {
 			}
 
 			commandHandler := handlers.CommandHandler{
-				Data: update.Message.Command(),
-				User: User,
+				Data:  update.Message.Command(),
+				User:  User,
+				Props: update.Message.CommandArguments(),
 			}
 
 			result_msgs := commandHandler.HandleCommand()

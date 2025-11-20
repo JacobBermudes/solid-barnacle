@@ -6,11 +6,6 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-type MessageCreator struct {
-	BotAddress string
-	ChatID     int64
-}
-
 func HomeMsg(username string, balance int64, tariff string, active string) string {
 	return "Бот управления доступом AbsurfBoost VPN" + "\n\n" +
 		"Пользователь " + username + "!\n\n" +
@@ -59,7 +54,7 @@ func PaymentMenuMsg(username string, balance int64) string {
 
 func RefererMsg(userid string, botadress string) string {
 	refLink := botadress + "?start=ref" + userid
-	return "💵Акция «Приведи друга»💵\n\nПриглашайте друзей и получайте бонусы на баланс!\n\nЗа каждого приглашенного друга вы и ваш друг получит 10 рублей на баланс для тестирования сервиса.\n\nДля участия в акции просто поделитесь своей уникальной ссылкой приглашения:\n\n`" + refLink + "`\n\nЧем больше друзей вы пригласите, тем больше бонусов получите! Акция действует без ограничений по количеству приглашенных друзей.\n\nСпасибо, что выбираете наш VPN-сервис! Вместе мы сделаем интернет безопаснее и доступнее для всех."
+	return "💵Акция «Приведи друга»💵\n\nПриглашайте друзей и получайте бонусы на баланс!\n\nЗа каждого приглашенного друга вы и ваш друг получит 100 рублей на баланс для тестирования сервиса.\n\nДля участия в акции просто поделитесь своей уникальной ссылкой приглашения:\n\n`" + refLink + "`\n\nЧем больше друзей вы пригласите, тем больше бонусов получите! Акция действует без ограничений по количеству приглашенных друзей.\n\nСпасибо, что выбираете наш VPN-сервис! Вместе мы сделаем интернет безопаснее и доступнее для всех."
 }
 
 func DonateMsg() string {
@@ -106,7 +101,7 @@ func GetInlineKeyboardMarkup(reqData string, uid int64) tgbotapi.InlineKeyboardM
 				tgbotapi.NewInlineKeyboardButtonData("Главное меню", "homePage"),
 			),
 		)
-	case "vpnConnect", "connect":
+	case "vpnConnect", "connect", "bindKey":
 		return tgbotapi.NewInlineKeyboardMarkup(
 			tgbotapi.NewInlineKeyboardRow(
 				tgbotapi.NewInlineKeyboardButtonData("Добавить ключ", "bindKey"),
@@ -116,7 +111,7 @@ func GetInlineKeyboardMarkup(reqData string, uid int64) tgbotapi.InlineKeyboardM
 				tgbotapi.NewInlineKeyboardButtonData("Главное меню", "homePage"),
 			),
 		)
-	case "help":
+	case "help", "helpMenu":
 		return tgbotapi.NewInlineKeyboardMarkup(
 			tgbotapi.NewInlineKeyboardRow(
 				tgbotapi.NewInlineKeyboardButtonURL("iPhone/iPad", "https://absurfboost.com/help/ios"),
@@ -153,22 +148,4 @@ func GetInlineKeyboardMarkup(reqData string, uid int64) tgbotapi.InlineKeyboardM
 	return tgbotapi.InlineKeyboardMarkup{
 		InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{},
 	}
-}
-
-// OLD SHIT
-
-func (m MessageCreator) BindKeyTxt(username string, balance int64, tariff string, adblocker bool, active string) string {
-	return "Бот управления доступом AbsurfBoost VPN" + "\n\n" +
-		"Пользователь " + username + "!\n\n" +
-		"Твой баланс: " + fmt.Sprintf("%d", balance) + "\n" +
-		"Тариф: " + tariff + "\n" +
-		"Статус доступа к VPN: " + active + "\n"
-}
-
-func (m MessageCreator) SuccessTopup(sum int64, topupSum int64) string {
-	return fmt.Sprintf("Баланс успешно пополнен на %d рублей. Итого: %d", topupSum, sum)
-}
-
-func (m MessageCreator) ThanksMsg() string {
-	return "Спасибо за регистрацию по реферальной ссылке!"
 }
