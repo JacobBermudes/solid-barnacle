@@ -42,6 +42,9 @@ func (d DB_user) GetAccount() DB_user {
 
 	accountDataQuery := acc_db.Get(ctx, fmt.Sprintf("%d", d.UserID))
 
+	fmt.Printf("Getting account for user ID: %d\n", d.UserID)
+	fmt.Printf("Redis GET result: %+v\n", accountDataQuery)
+
 	if accountDataQuery != nil {
 		accountData, _ := accountDataQuery.Result()
 		json.Unmarshal([]byte(accountData), &d)
