@@ -104,5 +104,6 @@ func (d User) GetBindedKeys() []string {
 }
 
 func (d User) AddKey(key string) string {
+	AddKey(key)
 	return "Ключ успешно добавлен в общий пул доступных ключей для раздачи пользователям! На данный момент в пуле доступно " + fmt.Sprintf("%d", GetFreeKeys()) + " ключей."
 }
