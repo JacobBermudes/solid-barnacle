@@ -27,6 +27,11 @@ func main() {
 	r := http.NewServeMux()
 	r.HandleFunc("/api", func(w http.ResponseWriter, r *http.Request) {
 
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
 		if r.Method != "POST" {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 			w.Write([]byte("API supports only POST method!"))
