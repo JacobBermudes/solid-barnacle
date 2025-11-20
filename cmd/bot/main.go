@@ -80,12 +80,12 @@ func main() {
 		}
 
 		if update.Message != nil && keySender == update.Message.From.ID {
-			keyStorage := account.KeyStorage{
-				UserID: keySender,
-				Keys:   []string{update.Message.Text},
+
+			User := core.User{
+				UserID: update.Message.From.ID,
 			}
 
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, keyStorage.AddKeyToStorage())
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, User.AddKey(update.Message.Text))
 			msg.ParseMode = "Markdown"
 			bot.Send(msg)
 
