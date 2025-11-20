@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	core "speed-ball/internal/core/data"
 )
 
 type Api_req struct {
@@ -45,8 +46,31 @@ func main() {
 			return
 		}
 
+		User := core.User{
+			UserID: req.Id,
+		}
+
+		if User.AccountExist() {
+
+			UserData := User.GetAccount()
+
+			resp := Api_resp{
+				Username:   UserData.Username,
+				Balance:    UserData.Balance,
+				Tariff:     UserData.Tariff,
+				SharedKeys: []string{},
+				Active:     "yes",
+			}
+
+			w.WriteHeader(http.StatusOK)
+			w.Header().Set("Content-Type", "application/json")
+
+			json.NewEncoder(w).Encode(resp)
+			return
+		}
+
 		resp := Api_resp{
-			Username:   req.Username,
+			Username:   "@Голова",
 			Balance:    0,
 			Tariff:     "unknown",
 			SharedKeys: []string{},
