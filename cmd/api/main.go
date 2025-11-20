@@ -2,11 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
-	"speed-ball/handlers"
-	core "speed-ball/internal/core/data"
-	"strconv"
 )
 
 type Api_req struct {
@@ -43,42 +41,10 @@ func main() {
 			return
 		}
 
-		User := core.User{
-			UserID:   req.Id,
-			Username: req.Username,
-		}
-
-		if req.Method == "start" && !User.AccountExist() && req.Props != "" {
-
-			User.RefBonus(100)
-
-			makerID, _ := strconv.ParseInt(req.Props, 10, 64)
-			inviteMaker := core.User{
-				UserID: makerID,
-			}
-			inviteMaker.RefBonus(100)
-
-			User = User.SetAccount()
-		}
-
 		var msgs []string
 
-		if req.Type == "cb" {
-
-			cbData := handlers.CallbackHandler{
-				Data: req.Method,
-				User: User,
-			}
-
-			msgs = cbData.HandleCallback()
-		} else if req.Type == "cmd" {
-
-			cmdData := handlers.CommandHandler{
-				Data: req.Method,
-				User: User,
-			}
-
-			msgs = cmdData.HandleCommand()
+		if req.Type == "wa" {
+			msgs = append(msgs, "WebApp API is under construction...", fmt.Sprint(req))
 		}
 
 		w.WriteHeader(http.StatusOK)
