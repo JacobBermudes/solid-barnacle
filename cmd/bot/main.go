@@ -66,10 +66,11 @@ func main() {
 			result_msgs := commandHandler.HandleCommand()
 
 			for _, text := range result_msgs {
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, text)
-				msg.ParseMode = "Markdown"
-				msg.DisableWebPagePreview = true
-				bot.Send(msg)
+				newMsg := tgbotapi.NewMessage(update.Message.Chat.ID, text)
+				newMsg.ReplyMarkup = msg.GetInlineKeyboardMarkup(update.Message.Command(), User.UserID)
+				newMsg.ParseMode = "Markdown"
+				newMsg.DisableWebPagePreview = true
+				bot.Send(newMsg)
 			}
 
 			if update.Message.Command() == "addkey" {
