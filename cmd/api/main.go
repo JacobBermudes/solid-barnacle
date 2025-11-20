@@ -1,4 +1,4 @@
-package api
+package main
 
 import (
 	"encoding/json"
@@ -61,7 +61,7 @@ func main() {
 			User = User.SetAccount()
 		}
 
-		var respString string
+		var msgs []string
 
 		if req.Type == "cb" {
 
@@ -70,7 +70,7 @@ func main() {
 				User: User,
 			}
 
-			respString = cbData.HandleCallback()
+			msgs = cbData.HandleCallback()
 		} else if req.Type == "cmd" {
 
 			cmdData := handlers.CommandHandler{
@@ -78,13 +78,13 @@ func main() {
 				User: User,
 			}
 
-			respString = cmdData.HandleCommand()
+			msgs = cmdData.HandleCommand()
 		}
 
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
 
-		json.NewEncoder(w).Encode(respString)
+		json.NewEncoder(w).Encode(msgs)
 	})
 
 	log.Println("Go API listening :8000 (HTTP)")

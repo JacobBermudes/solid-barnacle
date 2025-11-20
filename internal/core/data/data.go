@@ -60,15 +60,6 @@ func (d DB_user) TopupBalance(sum int64) int64 {
 	return balance_db.IncrBy(ctx, fmt.Sprintf("%d", d.UserID), sum).Val()
 }
 
-func (d DB_user) GetFreeKeys() int64 {
-
-	count, err := keys_db.SCard(ctx, "ready_keys").Result()
-	if err != nil {
-		return 0
-	}
-	return count
-}
-
 func (d DB_user) GetBindedKeys() []string {
 
 	keys, _ := keys_db.SMembers(ctx, fmt.Sprintf("%d", d.UserID)).Result()
@@ -80,4 +71,18 @@ func (d DB_user) BindRandomKey() string {
 	bindedKey := keys_db.SPop(ctx, "ready_keys").Val()
 	keys_db.SAdd(ctx, fmt.Sprintf("%d", d.UserID), bindedKey)
 	return bindedKey
+}
+
+func AddKey(key string) bool {
+	result := keys_db.SAdd(ctx, "ready_keys", key)
+	return result.Err() != redis.Nil
+}
+
+func GetFreeKeys() int64 {
+
+	count, err := keys_db.SCard(ctx, "ready_keys").Result()
+	if err != nil {
+		return 0
+	}
+	return count
 }

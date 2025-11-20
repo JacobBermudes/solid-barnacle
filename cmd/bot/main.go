@@ -1,11 +1,12 @@
-package bot
+package main
 
 import (
 	"log"
 	"net/http"
 	"os"
-	"speed-ball/account"
 	"speed-ball/handlers"
+	core "speed-ball/internal/core/data"
+	"speed-ball/internal/msg"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -53,15 +54,23 @@ func main() {
 
 		if update.Message != nil && update.Message.IsCommand() {
 
-			commandHandler := handlers.CommandHandler{
-				ChatID:          update.Message.Chat.ID,
-				Command:         update.Message.Command(),
-				InternalAccount: account.InternalAccount{Userid: update.Message.From.ID, Username: update.Message.From.UserName},
+			User := core.User{
+				UserID: update.Message.From.ID,
 			}
 
-			commandResult := commandHandler.HandleCommand()
+			commandHandler := handlers.CommandHandler{
+				Data: update.Message.Command(),
+				User: User,
+			}
 
-			bot.Send(commandResult.Message)
+			result_msgs := commandHandler.HandleCommand()
+
+			for _, text := range result_msgs {
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, text)
+				msg.ParseMode = "Markdown"
+				msg.DisableWebPagePreview = true
+				bot.Send(msg)
+			}
 
 			if update.Message.Command() == "addkey" {
 				keySender = update.Message.From.ID
@@ -85,35 +94,39 @@ func main() {
 		}
 
 		if update.CallbackQuery != nil {
+
+			User := core.User{
+				UserID: update.CallbackQuery.From.ID,
+			}
+
 			callback := update.CallbackQuery
 			data := callback.Data
 
 			callbackHandler := handlers.CallbackHandler{
-				Data:            data,
-				ChatID:          callback.Message.Chat.ID,
-				CallbackID:      callback.ID,
-				InternalAccount: account.InternalAccount{Userid: callback.From.ID, Username: callback.From.UserName},
+				Data: data,
+				User: User,
 			}
 
 			callbackResult := callbackHandler.HandleCallback()
 
-			editMsg := tgbotapi.NewEditMessageTextAndMarkup(
-				callback.Message.Chat.ID,
-				callback.Message.MessageID,
-				callbackResult.Message.Text,
-				callbackResult.ReplyMarkup,
-			)
-			if callbackResult.NewMessage.Text != "" {
-				newMsg := callbackResult.NewMessage
-				newMsg.ReplyMarkup = callbackResult.ReplyMarkup
-				bot.Send(newMsg)
-				editMsg.ReplyMarkup = &tgbotapi.InlineKeyboardMarkup{
-					InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{},
+			for i, text := range callbackResult {
+				if i > 0 {
+					newMsg := tgbotapi.NewMessage(callback.Message.Chat.ID, text)
+					newMsg.ReplyMarkup = msg.GetInlineKeyboardMarkup(data, User.UserID)
+					newMsg.ParseMode = "Markdown"
+					newMsg.DisableWebPagePreview = true
+					bot.Send(newMsg)
+				} else {
+					editMsg := tgbotapi.NewEditMessageTextAndMarkup(
+						callback.Message.Chat.ID,
+						callback.Message.MessageID,
+						text,
+						msg.GetInlineKeyboardMarkup(data, User.UserID))
+					editMsg.ParseMode = "Markdown"
+					editMsg.DisableWebPagePreview = true
+					bot.Send(editMsg)
 				}
 			}
-			editMsg.ParseMode = callbackResult.Message.ParseMode
-			editMsg.DisableWebPagePreview = callbackResult.Message.DisableWebPagePreview
-			bot.Send(editMsg)
 
 			bot.Request(tgbotapi.NewCallback(callback.ID, ""))
 
