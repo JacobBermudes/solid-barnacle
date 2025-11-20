@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 )
@@ -41,16 +40,18 @@ func main() {
 			return
 		}
 
-		var msgs []string
-
-		if req.Type == "wa" {
-			msgs = append(msgs, "WebApp API is under construction...", fmt.Sprint(req))
+		resp := Api_resp{
+			Username:   req.Username,
+			Balance:    0,
+			Tariff:     "unknown",
+			SharedKeys: []string{},
+			Active:     "no",
 		}
 
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
 
-		json.NewEncoder(w).Encode(msgs)
+		json.NewEncoder(w).Encode(resp)
 	})
 
 	log.Println("Go API listening :8000 (HTTP)")
