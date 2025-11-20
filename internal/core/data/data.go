@@ -15,6 +15,7 @@ type DB_user struct {
 	Tariff   string `json:"tariff"`
 	Active   bool   `json:"active"`
 	Created  string `json:"created"`
+	Balance  int64  `json:"balance"`
 }
 
 var rdbpass = os.Getenv("REDIS_PASS")
@@ -42,12 +43,18 @@ func (d DB_user) GetAccount() DB_user {
 
 	accountDataQuery := acc_db.Get(ctx, fmt.Sprintf("%d", d.UserID))
 
-	fmt.Printf("Getting account for user ID: %d\n", d.UserID)
-	fmt.Printf("Redis GET result: %+v\n", accountDataQuery)
-
 	if accountDataQuery != nil {
 		accountData, _ := accountDataQuery.Result()
 		json.Unmarshal([]byte(accountData), &d)
+
+		var EmptyBalance int64 = 0
+		balanceQuery, err := balance_db.Get(ctx, fmt.Sprintf("%d", d.UserID)).Int64()
+
+		if err != redis.Nil {
+			d.Balance = balanceQuery
+		} else {
+			d.Balance = EmptyBalance
+		}
 	}
 
 	return d
