@@ -6,12 +6,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-type MessageCreator struct {
-	BotAddress string
-	ChatID     int64
-}
-
-func (m MessageCreator) HomeMsg(username string, balance int64, tariff string, adblocker bool, active string) string {
+func HomeMsg(username string, balance int64, tariff string, active string) string {
 	return "Бот управления доступом AbsurfBoost VPN" + "\n\n" +
 		"Пользователь " + username + "!\n\n" +
 		"Твой баланс: " + fmt.Sprintf("%d", balance) + "\n" +
@@ -19,15 +14,7 @@ func (m MessageCreator) HomeMsg(username string, balance int64, tariff string, a
 		"Статус доступа к VPN: " + active + "\n"
 }
 
-func (m MessageCreator) BindKeyTxt(username string, balance int64, tariff string, adblocker bool, active string) string {
-	return "Бот управления доступом AbsurfBoost VPN" + "\n\n" +
-		"Пользователь " + username + "!\n\n" +
-		"Твой баланс: " + fmt.Sprintf("%d", balance) + "\n" +
-		"Тариф: " + tariff + "\n" +
-		"Статус доступа к VPN: " + active + "\n"
-}
-
-func (m MessageCreator) VpnConnectMsg(currentKeys []string) string {
+func VpnConnectMsg(currentKeys []string) string {
 
 	text := ""
 
@@ -49,7 +36,11 @@ func (m MessageCreator) VpnConnectMsg(currentKeys []string) string {
 	return text
 }
 
-func (m MessageCreator) PaymentMenuMsg(username string, balance int64) string {
+func HelpMenuMsg() string {
+	return "Для получения дальнейшей помощи по настройке VPN-соединения, пожалуйста, выберите вашу операционную систему:\n\n"
+}
+
+func PaymentMenuMsg(username string, balance int64) string {
 
 	walletData := fmt.Sprintf("Уважаемый %s!\nВаш баланс: %d рублей.\n\n", username, balance)
 
@@ -61,28 +52,20 @@ func (m MessageCreator) PaymentMenuMsg(username string, balance int64) string {
 		"🔍 Хотите пополнить баланс или изменить тариф? Используйте кнопки ниже! 👇"
 }
 
-func (m MessageCreator) HelpMenuMsg() string {
-	return "Для получения дальнейшей помощи по настройке VPN-соединения, пожалуйста, выберите вашу операционную систему:\n\n"
+func RefererMsg(userid string, botadress string) string {
+	refLink := botadress + "?start=ref" + userid
+	return "💵Акция «Приведи друга»💵\n\nПриглашайте друзей и получайте бонусы на баланс!\n\nЗа каждого приглашенного друга вы и ваш друг получит 100 рублей на баланс для тестирования сервиса.\n\nДля участия в акции просто поделитесь своей уникальной ссылкой приглашения:\n\n`" + refLink + "`\n\nЧем больше друзей вы пригласите, тем больше бонусов получите! Акция действует без ограничений по количеству приглашенных друзей.\n\nСпасибо, что выбираете наш VPN-сервис! Вместе мы сделаем интернет безопаснее и доступнее для всех."
 }
 
-func (m MessageCreator) RefererMsg(userid string) string {
-	refLink := m.BotAddress + "?start=ref" + userid
-	return "💵Акция «Приведи друга»💵\n\nПриглашайте друзей и получайте бонусы на баланс!\n\nЗа каждого приглашенного друга вы и ваш друг получит 10 рублей на баланс для тестирования сервиса.\n\nДля участия в акции просто поделитесь своей уникальной ссылкой приглашения:\n\n`" + refLink + "`\n\nЧем больше друзей вы пригласите, тем больше бонусов получите! Акция действует без ограничений по количеству приглашенных друзей.\n\nСпасибо, что выбираете наш VPN-сервис! Вместе мы сделаем интернет безопаснее и доступнее для всех."
-}
-
-func (m MessageCreator) SuccessTopup(sum int64, topupSum int64) string {
-	return fmt.Sprintf("Баланс успешно пополнен на %d рублей. Итого: %d", topupSum, sum)
-}
-
-func (m MessageCreator) DonateMsg() string {
+func DonateMsg() string {
 	return "Если вам нравится наш VPN-сервис и вы хотите поддержать его развитие финансово, поддержка принимается по СБП на ТБанк :)"
 }
 
-func (m MessageCreator) ThanksMsg() tgbotapi.MessageConfig {
-	return tgbotapi.NewMessage(m.ChatID, "Спасибо за регистрацию по реферальной ссылке!")
+func SuccessTopup(sum int64, topupSum int64) string {
+	return fmt.Sprintf("Баланс успешно пополнен на %d рублей. Итого: %d", topupSum, sum)
 }
 
-func (m MessageCreator) GetInlineKeyboardMarkup(reqData string, uid int64) tgbotapi.InlineKeyboardMarkup {
+func GetInlineKeyboardMarkup(reqData string, uid int64) tgbotapi.InlineKeyboardMarkup {
 	switch reqData {
 	case "homePage", "start":
 		return tgbotapi.NewInlineKeyboardMarkup(
@@ -102,7 +85,7 @@ func (m MessageCreator) GetInlineKeyboardMarkup(reqData string, uid int64) tgbot
 				tgbotapi.NewInlineKeyboardButtonData("💬 Помощь", "help"),
 			),
 		)
-	case "paymentMenu":
+	case "paymentMenu", "topup_fiat", "topup_crypto", "updateBalance":
 		return tgbotapi.NewInlineKeyboardMarkup(
 			tgbotapi.NewInlineKeyboardRow(
 				tgbotapi.NewInlineKeyboardButtonData("Пополнить банковской картой", "topup_fiat"),
@@ -118,7 +101,7 @@ func (m MessageCreator) GetInlineKeyboardMarkup(reqData string, uid int64) tgbot
 				tgbotapi.NewInlineKeyboardButtonData("Главное меню", "homePage"),
 			),
 		)
-	case "vpnConnect", "connect":
+	case "vpnConnect", "connect", "bindKey":
 		return tgbotapi.NewInlineKeyboardMarkup(
 			tgbotapi.NewInlineKeyboardRow(
 				tgbotapi.NewInlineKeyboardButtonData("Добавить ключ", "bindKey"),
@@ -128,7 +111,7 @@ func (m MessageCreator) GetInlineKeyboardMarkup(reqData string, uid int64) tgbot
 				tgbotapi.NewInlineKeyboardButtonData("Главное меню", "homePage"),
 			),
 		)
-	case "help":
+	case "help", "helpMenu":
 		return tgbotapi.NewInlineKeyboardMarkup(
 			tgbotapi.NewInlineKeyboardRow(
 				tgbotapi.NewInlineKeyboardButtonURL("iPhone/iPad", "https://absurfboost.com/help/ios"),
@@ -147,7 +130,7 @@ func (m MessageCreator) GetInlineKeyboardMarkup(reqData string, uid int64) tgbot
 			),
 		)
 	case "referral":
-		refLink := m.BotAddress + "?start=ref" + fmt.Sprintf("%d", uid)
+		refLink := "https://t.me/mmcvpnbot?start=ref" + fmt.Sprintf("%d", uid)
 		return tgbotapi.NewInlineKeyboardMarkup(
 			tgbotapi.NewInlineKeyboardRow(
 				tgbotapi.NewInlineKeyboardButtonData("Главное меню", "homePage"),

@@ -2,100 +2,48 @@ package handlers
 
 import (
 	"fmt"
-	"mmcvpn/account"
-	"mmcvpn/msg"
-
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	core "speed-ball/internal/core/data"
+	"speed-ball/internal/msg"
 )
 
 type CallbackHandler struct {
-	Data            string
-	ChatID          int64
-	CallbackID      string
-	ShowHome        bool
-	InternalAccount account.InternalAccount
+	Data string
+	User core.User
 }
 
-type CallbackResult struct {
-	Message     tgbotapi.MessageConfig
-	ReplyMarkup tgbotapi.InlineKeyboardMarkup
-	NewMessage  tgbotapi.MessageConfig
-}
+func (c CallbackHandler) HandleCallback() []string {
 
-func (c CallbackHandler) HandleCallback() CallbackResult {
-
-	messenger := msg.MessageCreator{
-		BotAddress: "https://t.me/mmcvpnbot",
-		ChatID:     c.ChatID,
-	}
-
-	result := CallbackResult{
-		Message:     tgbotapi.NewMessage(c.ChatID, "Ошибка разбора команды. Пожалуйста обратитесь в поддержку."),
-		ReplyMarkup: tgbotapi.InlineKeyboardMarkup{},
-	}
+	result := []string{}
 
 	switch c.Data {
 	case "bindKey":
-		BindedKey := account.KeyStorage{
-			UserID: c.InternalAccount.Userid,
-		}.BindRandomKey()
-		msg := tgbotapi.NewMessage(c.ChatID, BindedKey)
-		msg.ParseMode = "Markdown"
-		result.Message = msg
-		text := messenger.VpnConnectMsg(c.InternalAccount.GetSharedKey())
-		result.NewMessage = tgbotapi.NewMessage(c.ChatID, text)
-		result.NewMessage.ParseMode = "Markdown"
-		c.Data = "vpnConnect"
+		result = append(result, c.User.BindRandomKey(), msg.VpnConnectMsg(c.User.GetBindedKeys()))
 	case "homePage":
-		text := messenger.HomeMsg(c.InternalAccount.GetUsername(), c.InternalAccount.GetBalance(), c.InternalAccount.GetTariff(), c.InternalAccount.GetAdblocker(), c.InternalAccount.GetActive())
-		result.Message = tgbotapi.NewMessage(c.ChatID, text)
+		UserData := c.User.GetAccount()
+		result = []string{msg.HomeMsg(UserData.Username, UserData.Balance, UserData.Tariff, UserData.Active)}
 	case "vpnConnect":
-		text := messenger.VpnConnectMsg(c.InternalAccount.GetSharedKey())
-		result.Message = tgbotapi.NewMessage(c.ChatID, text)
+		result = []string{msg.VpnConnectMsg(c.User.GetBindedKeys())}
 	case "helpMenu":
-		result.Message = tgbotapi.NewMessage(c.ChatID, messenger.HelpMenuMsg())
+		result = []string{msg.HelpMenuMsg()}
 	case "paymentMenu":
-		result.Message = tgbotapi.NewMessage(c.ChatID, messenger.PaymentMenuMsg(c.InternalAccount.GetUsername(), c.InternalAccount.GetBalance()))
+		UserData := c.User.GetAccount()
+		result = []string{msg.PaymentMenuMsg(UserData.Username, UserData.Balance)}
 	case "updateBalance":
-		result.Message = tgbotapi.NewMessage(c.ChatID, messenger.PaymentMenuMsg(c.InternalAccount.GetUsername(), c.InternalAccount.GetBalance()))
+		UserData := c.User.GetAccount()
+		result = []string{msg.PaymentMenuMsg(UserData.Username, UserData.Balance)}
 	case "referral":
-		result.Message = tgbotapi.NewMessage(c.ChatID, messenger.RefererMsg(fmt.Sprintf("%d", c.InternalAccount.GetUserID())))
+		result = []string{msg.RefererMsg(fmt.Sprintf("%d", c.User.UserID), "https://t.me/mmcvpnbot")}
 	case "donate":
-		result.Message = tgbotapi.NewMessage(c.ChatID, messenger.DonateMsg())
+		result = []string{msg.DonateMsg()}
 	case "help":
-		result.Message = tgbotapi.NewMessage(c.ChatID, messenger.HelpMenuMsg())
-	case "topup_fiat":
+		result = []string{msg.HelpMenuMsg()}
+	case "topup_fiat", "topup_crypto":
+		UserData := c.User.GetAccount()
 		topupSum := int64(100)
-		sum := c.InternalAccount.TopupAccount(topupSum)
-		result.Message = tgbotapi.NewMessage(c.ChatID, messenger.SuccessTopup(sum, topupSum))
-		result.NewMessage = tgbotapi.NewMessage(c.ChatID, messenger.PaymentMenuMsg(c.InternalAccount.GetUsername(), sum))
-		result.NewMessage.ParseMode = "Markdown"
-		c.Data = "paymentMenu"
-	case "topup_crypto":
-		topupSum := int64(100)
-		sum := c.InternalAccount.TopupAccount(topupSum)
-		result.Message = tgbotapi.NewMessage(c.ChatID, messenger.SuccessTopup(sum, topupSum))
-		result.NewMessage = tgbotapi.NewMessage(c.ChatID, messenger.PaymentMenuMsg(c.InternalAccount.GetUsername(), sum))
-		result.NewMessage.ParseMode = "Markdown"
-		c.Data = "paymentMenu"
+		sum := c.User.TopupBalance(topupSum)
+		result = append(result, msg.SuccessTopup(sum, topupSum))
+		result = append(result, msg.PaymentMenuMsg(UserData.Username, sum))
 	}
-
-	result.ReplyMarkup = messenger.GetInlineKeyboardMarkup(c.Data, c.InternalAccount.GetUserID())
-	result.Message.ParseMode = "Markdown"
 
 	return result
-}
-
-func (c CallbackHandler) ShowHomePage() bool {
-
-	ActionsDontShowHome := []string{"homePage", "vpnConnect", "helpMenu", "paymentMenu", "updateBalance", "referral", "help"}
-
-	actionsSet := make(map[string]bool, len(ActionsDontShowHome))
-	for _, action := range ActionsDontShowHome {
-		actionsSet[action] = true
-	}
-
-	_, exists := actionsSet[c.Data]
-
-	return !exists
 }
