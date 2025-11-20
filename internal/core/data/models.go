@@ -49,6 +49,8 @@ func (d User) GetAccount() User {
 	}
 	UserData := DataUser.GetAccount()
 
+	fmt.Printf("Fetched user data: %+v\n", UserData)
+
 	stringData, _ := json.Marshal(UserData)
 	json.Unmarshal(stringData, &d)
 
