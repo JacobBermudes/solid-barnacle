@@ -13,9 +13,9 @@ import (
 
 func main() {
 
-	token := os.Getenv("TG_API")
+	token := os.Getenv("TELEGRAM_BOT_TOKEN")
 	if token == "" {
-		log.Fatal("TG_API environment variable not set")
+		log.Fatal("TELEGRAM_BOT_TOKEN environment variable not set")
 	}
 
 	bot, err := tgbotapi.NewBotAPI(token)
