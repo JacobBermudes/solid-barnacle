@@ -23,7 +23,7 @@ jobs:
           export CGO_ENABLED=0
           export GOOS=linux 
           export GOARCH=amd64
-          go build -o api ./cmd/api && go build -o daemon ./cmd/bot
+          go build -o speedball_api ./cmd/api && go build -o speedballd ./cmd/bot
           echo "Build completed."
           whoami
 
@@ -34,7 +34,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           source: "api"
-          target: "/etc/speedball/speedball_api"
+          target: "/etc/speedball"
 
       - name: Copy daemon binary to VPS
         uses: appleboy/scp-action@v0.1.7
@@ -43,7 +43,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           source: "daemon"
-          target: "/etc/speedball/speedballd"
+          target: "/etc/speedball"
 
       - name: Restart service on VPS
         uses: appleboy/ssh-action@v0.1.10
