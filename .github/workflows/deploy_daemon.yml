@@ -33,7 +33,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          source: "api"
+          source: "speedball_api"
           target: "/etc/speedball"
 
       - name: Copy daemon binary to VPS
@@ -42,7 +42,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          source: "daemon"
+          source: "speedballd"
           target: "/etc/speedball"
 
       - name: Restart service on VPS
