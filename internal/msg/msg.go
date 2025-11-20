@@ -85,7 +85,7 @@ func GetInlineKeyboardMarkup(reqData string, uid int64) tgbotapi.InlineKeyboardM
 				tgbotapi.NewInlineKeyboardButtonData("💬 Помощь", "help"),
 			),
 		)
-	case "paymentMenu":
+	case "paymentMenu", "topup_fiat", "topup_crypto", "updateBalance":
 		return tgbotapi.NewInlineKeyboardMarkup(
 			tgbotapi.NewInlineKeyboardRow(
 				tgbotapi.NewInlineKeyboardButtonData("Пополнить банковской картой", "topup_fiat"),
