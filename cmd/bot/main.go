@@ -118,6 +118,15 @@ func main() {
 					newMsg.ParseMode = "Markdown"
 					newMsg.DisableWebPagePreview = true
 					bot.Send(newMsg)
+				} else if len(callbackResult) == 1 {
+					editMsg := tgbotapi.NewEditMessageTextAndMarkup(
+						callback.Message.Chat.ID,
+						callback.Message.MessageID,
+						text,
+						msg.GetInlineKeyboardMarkup(data, User.UserID))
+					editMsg.ParseMode = "Markdown"
+					editMsg.DisableWebPagePreview = true
+					bot.Send(editMsg)
 				} else {
 					editMsg := tgbotapi.NewEditMessageTextAndMarkup(
 						callback.Message.Chat.ID,
