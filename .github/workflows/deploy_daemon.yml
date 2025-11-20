@@ -26,6 +26,16 @@ jobs:
           go build -o api ./cmd/api && go build -o daemon ./cmd/bot
           echo "Build completed."
 
+      - name: Ensure target dir exists
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            sudo mkdir -p /etc/speedball
+            sudo chown $USER /etc/speedball
+
       - name: Copy API binary to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
