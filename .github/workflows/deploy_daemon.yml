@@ -25,6 +25,7 @@ jobs:
           export GOARCH=amd64
           go build -o api ./cmd/api && go build -o daemon ./cmd/bot
           echo "Build completed."
+          whoami
 
       - name: Copy API binary to VPS
         uses: appleboy/scp-action@v0.1.7
