@@ -130,7 +130,7 @@ func GetInlineKeyboardMarkup(reqData string, uid int64) tgbotapi.InlineKeyboardM
 			),
 		)
 	case "referral":
-		refLink := "https://t.me/mmcvpnbot?start=ref" + fmt.Sprintf("%d", uid)
+		refLink := "https://t.me/surfboost_bot?start=ref" + fmt.Sprintf("%d", uid)
 		return tgbotapi.NewInlineKeyboardMarkup(
 			tgbotapi.NewInlineKeyboardRow(
 				tgbotapi.NewInlineKeyboardButtonData("Главное меню", "homePage"),
