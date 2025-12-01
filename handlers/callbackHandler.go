@@ -32,7 +32,7 @@ func (c CallbackHandler) HandleCallback() []string {
 		UserData := c.User.GetAccount()
 		result = []string{msg.PaymentMenuMsg(UserData.Username, UserData.Balance)}
 	case "referral":
-		result = []string{msg.RefererMsg(fmt.Sprintf("%d", c.User.UserID), "https://t.me/mmcvpnbot")}
+		result = []string{msg.RefererMsg(fmt.Sprintf("%d", c.User.UserID), "https://t.me/surfboost_bot")}
 	case "donate":
 		result = []string{msg.DonateMsg()}
 	case "help":
